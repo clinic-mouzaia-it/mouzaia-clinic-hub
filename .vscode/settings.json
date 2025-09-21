@@ -10,5 +10,17 @@
         "**/.settings": true,
         "**/.factorypath": true
     },
-    "hide-files.files": []
+    "hide-files.files": [],
+    "cSpell.words": [
+        "clinicnet",
+        "healthcheck",
+        "hubkeycloak",
+        "hubpostgres",
+        "hubtraefik",
+        "initdb",
+        "jdbc",
+        "mouzaiaclinic",
+        "pgdata",
+        "traefik"
+    ]
 }

@@ -1,5 +1,5 @@
 # Ignore environment files
-.env*
+.env
 # Ignore PostgreSQL persistent data
 traefik/acme/
 pgdata/

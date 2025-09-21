@@ -20,6 +20,7 @@ All services are accessible via local DNS (no port numbers needed).
 127.0.0.1 hub.mouzaiaclinic.local
 127.0.0.1 hubtraefik.mouzaiaclinic.local
 127.0.0.1 hubpostgres.mouzaiaclinic.local
+127.0.0.1 hubkeycloak.mouzaiaclinic.local
 ```
 
 ### 2. Environment Variables
@@ -40,15 +41,23 @@ docker-compose up --build
 
 ### 4. Access Services
 - **Clinic Hub App**: http://hub.mouzaiaclinic.local
-- **Traefik Dashboard**: http://hubtraefik.mouzaiaclinic.local
-- **PostgreSQL**: http://hubpostgres.mouzaiaclinic.local (for testing connectivity)
+- **Traefik Dashboard**: `${KEYCLOAK_DASHBOARD_URL}`
+- **PostgreSQL**: accessible via Traefik at its configured URL
+- **Keycloak Auth**: `${KEYCLOAK_URL}` (for admin and realm management)
 
-> **Note:** The dashboard is protected by basic auth (see `.env`).
+> **Note:** All URLs are driven by environment variables in `.env.development` and `.env.production`. No URLs are hardcoded in configs or code.
 
 ### 5. Stop the Stack
 ```
 docker-compose down
 ```
+
+---
+
+## Keycloak Integration
+- Keycloak is accessible at `${KEYCLOAK_URL}` (default: http://hubkeycloak.mouzaiaclinic.local)
+- Realm, admin user, and client configuration are imported from `keycloak/realm-config.json`, using environment variables for all URLs and credentials.
+- To change any service URL, update the corresponding variable in your `.env.*` file.
 
 ---
 
@@ -61,6 +70,9 @@ mouzaia-clinic-hub/
 ├── .env.production
 ├── traefik/
 │   └── traefik.yml
+├── keycloak/
+│   ├── realm-config.json
+│   └── themes/
 ├── .gitignore
 └── README.md
 ```

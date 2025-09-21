@@ -1,8 +1,7 @@
-version: '3.9'
-
+version: "3.9"
 services:
   traefik:
-    image: traefik:v3.0
+    image: traefik:v3.5.2
     command:
       - --api.dashboard=true
       - --providers.docker=true
@@ -32,7 +31,7 @@ services:
       - clinicnet
 
   postgres:
-    image: postgres:15
+    image: postgres:16
     restart: unless-stopped
     environment:
       - POSTGRES_DB=${POSTGRES_DB}
@@ -40,6 +39,7 @@ services:
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
     volumes:
       - pgdata:/var/lib/postgresql/data
+      - ./postgres-init:/docker-entrypoint-initdb.d
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.postgres.rule=Host(`hubpostgres.mouzaiaclinic.local`)"
@@ -47,6 +47,47 @@ services:
       - "traefik.http.services.postgres.loadbalancer.server.port=5432"
     networks:
       - clinicnet
+
+  keycloak:
+    image: keycloak/keycloak:26.3
+    command: start-dev --import-realm
+    ports:
+      - "8080:8080"
+    environment:
+      - KEYCLOAK_ADMIN=${KEYCLOAK_ADMIN}
+      - KEYCLOAK_ADMIN_PASSWORD=${KEYCLOAK_ADMIN_PASSWORD}
+      - KC_DB=postgres
+      - KC_DB_URL=jdbc:postgresql://postgres:5432/${KEYCLOAK_DB}
+      - KC_DB_USERNAME=${KEYCLOAK_DB_USER}
+      - KC_DB_PASSWORD=${KEYCLOAK_DB_PASSWORD}
+      - KC_HOSTNAME=hubkeycloak.mouzaiaclinic.local
+      - KC_PROXY=edge
+      - KC_HTTP_ENABLED=true
+      - KC_HEALTH_ENABLED=true
+      - KC_METRICS_ENABLED=true
+      - KC_LOG_LEVEL=INFO
+      - KEYCLOAK_REDIRECT_URI_LOCAL=${KEYCLOAK_REDIRECT_URI_LOCAL}
+      - KEYCLOAK_REDIRECT_URI_APP=${KEYCLOAK_REDIRECT_URI_APP}
+      - CLINIC_APP_URL=${CLINIC_APP_URL}
+    depends_on:
+      - postgres
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.keycloak.rule=Host(`hubkeycloak.mouzaiaclinic.local`)"
+      - "traefik.http.routers.keycloak.entrypoints=websecure"
+      - "traefik.http.routers.keycloak.tls.certresolver=letsencrypt"
+      - "traefik.http.services.keycloak.loadbalancer.server.port=8080"
+
+    networks:
+      - clinicnet
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    volumes:
+      - ./keycloak/realm-config.json:/opt/keycloak/data/import/realm-config.json:ro
+      - ./keycloak/themes:/opt/keycloak/themes
 
 networks:
   clinicnet:
