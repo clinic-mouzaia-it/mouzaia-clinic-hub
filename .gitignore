@@ -1,0 +1,8 @@
+# Ignore environment files
+.env*
+# Ignore PostgreSQL persistent data
+traefik/acme/
+pgdata/
+# Ignore Docker-related files
+*.pid
+*.log

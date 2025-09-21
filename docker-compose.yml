@@ -1,0 +1,57 @@
+version: '3.9'
+
+services:
+  traefik:
+    image: traefik:v3.0
+    command:
+      - --api.dashboard=true
+      - --providers.docker=true
+      - --entrypoints.web.address=:80
+      - --entrypoints.websecure.address=:443
+      - --providers.docker.exposedbydefault=false
+      - --log.level=INFO
+      - --certificatesresolvers.letsencrypt.acme.tlschallenge=true
+      - --certificatesresolvers.letsencrypt.acme.email=${TRAEFIK_ACME_EMAIL}
+      - --certificatesresolvers.letsencrypt.acme.storage=/letsencrypt/acme.json
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./traefik/traefik.yml:/traefik.yml:ro
+      - ./traefik/acme:/letsencrypt
+    environment:
+      - TRAEFIK_DASHBOARD_USER=${TRAEFIK_DASHBOARD_USER}
+      - TRAEFIK_DASHBOARD_PASS=${TRAEFIK_DASHBOARD_PASS}
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.traefik.rule=Host(`hubtraefik.mouzaiaclinic.local`)"
+      - "traefik.http.routers.traefik.entrypoints=web"
+      - "traefik.http.routers.traefik.service=api@internal"
+    networks:
+      - clinicnet
+
+  postgres:
+    image: postgres:15
+    restart: unless-stopped
+    environment:
+      - POSTGRES_DB=${POSTGRES_DB}
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.postgres.rule=Host(`hubpostgres.mouzaiaclinic.local`)"
+      - "traefik.http.routers.postgres.entrypoints=web"
+      - "traefik.http.services.postgres.loadbalancer.server.port=5432"
+    networks:
+      - clinicnet
+
+networks:
+  clinicnet:
+    driver: bridge
+
+volumes:
+  pgdata:
+    driver: local
