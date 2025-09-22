@@ -14,13 +14,12 @@ All services are accessible via local DNS (no port numbers needed).
 
 ### 1. Prerequisites
 - [Docker](https://docs.docker.com/get-docker/) & [Docker Compose](https://docs.docker.com/compose/)
-- Add the following to your `/etc/hosts` (Linux/macOS) or `C:\Windows\System32\drivers\etc\hosts` (Windows):
 
 ```
-127.0.0.1 hub.mouzaiaclinic.local
-127.0.0.1 hubtraefik.mouzaiaclinic.local
-127.0.0.1 hubpostgres.mouzaiaclinic.local
-127.0.0.1 hubkeycloak.mouzaiaclinic.local
+DNS resolution for hub.mouzaiaclinic.local
+DNS resolution for hubtraefik.mouzaiaclinic.local
+DNS resolution for hubpostgres.mouzaiaclinic.local
+DNS resolution for hubkeycloak.mouzaiaclinic.local
 ```
 
 ### 2. Environment Variables
@@ -52,15 +51,18 @@ docker-compose up --build
 docker-compose down
 ```
 
+
 ---
 
 ## Keycloak Integration
-- Keycloak is accessible at `${KEYCLOAK_URL}` (default: http://hubkeycloak.mouzaiaclinic.local)
-- Realm, admin user, and client configuration are imported from `keycloak/realm-config.json`, using environment variables for all URLs and credentials.
+- Keycloak is accessible at `${KEYCLOAK_URL}` (default: http://hubkeycloak.mouzaiaclinic.local) through Traefik.
+- Realm, admin user, and client configuration are imported from `keycloak/realm-config.json`, using environment variables for credentials.
 - To change any service URL, update the corresponding variable in your `.env.*` file.
 
 ---
 
+**Note:** The postgres db is not exposed and can be accessed with the `${KC_DB_URL}` variable.
+---
 ## Directory Structure
 ```
 mouzaia-clinic-hub/
