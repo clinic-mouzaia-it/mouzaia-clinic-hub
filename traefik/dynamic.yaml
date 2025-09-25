@@ -1,0 +1,27 @@
+http:
+  middlewares:
+    dashboard-auth:
+      basicAuth:
+        users:
+          - "admin:$2y$05$EmmPwn8IlNMkSqOStWuZ2OVlPWa7XM5CQSdOXPJcN4kyTUGCDC.7C"
+
+  routers:
+    traefik:
+      rule: "Host(`hubtraefik.mouzaiaclinic.local`)"
+      service: api@internal
+      entryPoints:
+        - web
+      middlewares:
+        - dashboard-auth
+
+    keycloak:
+      rule: "Host(`hubkeycloak.mouzaiaclinic.local`)"
+      service: keycloak-svc
+      entryPoints:
+        - web
+
+  services:
+    keycloak-svc:
+      loadBalancer:
+        servers:
+          - url: "http://keycloak:8080"
