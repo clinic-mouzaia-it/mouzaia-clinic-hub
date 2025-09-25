@@ -1,65 +1,86 @@
-version: "3.9"
-
 services:
   traefik:
-    image: traefik:v3.5.2
-    ports:
-      - "80:80"
-      - "443:443"
-      - "8080:8080" # Expose the dashboard
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock:ro
+    image: traefik:latest
     command:
-      - "--api.insecure=true" # Enable the dashboard
-      - "--providers.docker=true" # Enable Docker provider
-      - "--entrypoints.web.address=:80" # Define entrypoint for port 80
-      - "--entrypoints.websecure.address=:443" # Define entrypoint for port 443
+      - "--api.insecure=false" # Enables Traefik's dashboard (for testing)
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false" # Disable auto-discovery
+      - "--entrypoints.web.address=:80" # HTTP entry point
+      - "--entrypoints.websecure.address=:443" # HTTPS entry point
+      - "--entryPoints.web.http.redirections.entryPoint.to=websecure"
+      - "--certificatesresolvers.myresolver.acme.httpchallenge=true" # Enable Let's Encrypt for SSL
+      - "--certificatesresolvers.myresolver.acme.httpchallenge.entrypoint=web"
+      - "--certificatesresolvers.myresolver.acme.email=me@example.tech" # Email for Let's Encrypt
+      - "--certificatesresolvers.myresolver.acme.storage=/letsencrypt/acme.json"
+      - "--log.filePath=/var/log/traefik/traefik.log" # Log file within mounted volume
+      - "--log.level=WARN" # Set log level to WARN
     labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.traefik.rule=Host(`hubtraefik.mouzaiaclinic.local`)"
-      - "traefik.http.routers.traefik.entrypoints=web"
-      - "traefik.http.routers.traefik.service=api@internal"
+      - "traefik.http.middlewares.middleware12.headers.sslforcehost=true"
+      - "traefik.http.middlewares.middleware12.headers.sslhost=hubkeycloak.mouzaiaclinic.local"
+    ports:
+      - "80:80" # HTTP
+      - "443:443" # HTTPS
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock:ro" # For Docker provider
+      - "./letsencrypt:/letsencrypt" # Persist Let's Encrypt certificates
+      - traefik-logs:/var/log/traefik
+    networks:
+      - web
+    restart: always
 
   keycloak:
-    image: quay.io/keycloak/keycloak:26.3
-    command: start-dev
+    image: quay.io/keycloak/keycloak:latest # Pre-built Keycloak Docker image latest version
     environment:
+      - KC_DB=postgres #Uses Postgres for DB
+      - KC_DB_URL=jdbc:postgresql://db:5432/keycloak
+      - KC_DB_USERNAME=${KC_DB_USERNAME}
+      - KC_FEATURES=hostname:v2 # Add other features as necessary see docs
+      - KC_DB_PASSWORD=${KC_DB_PASSWORD}
+      - KC_HOSTNAME=hubkeycloak.mouzaiaclinic.local
       - KEYCLOAK_ADMIN=${KEYCLOAK_ADMIN}
       - KEYCLOAK_ADMIN_PASSWORD=${KEYCLOAK_ADMIN_PASSWORD}
-      - KC_DB=postgres
-      - KC_DB_URL=jdbc:postgresql://postgres:5432/${KEYCLOAK_DB}
-      - KC_DB_USERNAME=${KEYCLOAK_DB_USER}
-      - KC_DB_PASSWORD=${KEYCLOAK_DB_PASSWORD}
-      - KC_HOSTNAME=hubkeycloak.mouzaiaclinic.local
-      - KC_PROXY=edge
-      - KEYCLOAK_REDIRECT_URI_LOCAL=${KEYCLOAK_REDIRECT_URI_LOCAL}
-      - KEYCLOAK_REDIRECT_URI_APP=${CLINIC_APP_URL}
-      - CLINIC_APP_URL=${CLINIC_APP_URL}
-    labels:
-      - "traefik.http.routers.keycloak.rule=Host(`hubkeycloak.mouzaiaclinic.local`)"
-      - "traefik.http.routers.keycloak.entrypoints=web"
-      - "traefik.http.services.keycloak.loadbalancer.server.port=8080"
-
-  postgres:
-    image: postgres:16
-    restart: unless-stopped
-    environment:
-      - POSTGRES_DB=${POSTGRES_DB}
-      - POSTGRES_USER=${POSTGRES_USER}
-      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
-    volumes:
-      - pgdata:/var/lib/postgresql/data
-      - ./postgres-init:/docker-entrypoint-initdb.d
+      - KC_HTTP_PORT=8080
+      - KC_HTTP_ENABLED=true
+      - KC_HEALTH_ENABLED=false # Enable health as needed see docs
+      - KC_PROXY_HEADERS=xforwarded #forwarded #CAUTION see docs on forwarding
+      - KC_LOG=console # See docs on logs
+      - KC_LOG_LEVEL=WARN # For debugging set to DEBUG see docs on logs
+      - KC_HOSTNAME_STRICT=true
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.postgres.rule=Host(`hubpostgres.mouzaiaclinic.local`)"
-      - "traefik.http.routers.postgres.entrypoints=web"
-      - "traefik.http.services.postgres.loadbalancer.server.port=5432"
+      - "traefik.http.routers.my-container.rule=Host(`hubkeycloak.mouzaiaclinic.local`)" # Route for your domain
+      - "traefik.http.routers.my-container.entrypoints=websecure"
+      - "traefik.http.routers.my-container.tls.certresolver=myresolver" # Use Let's Encrypt for SSL
+      - "traefik.http.services.my-container.loadbalancer.server.port=8080" # Route to port 8080
+    networks:
+      - web
+    volumes:
+      #- ./certs:/opt/keycloak/conf/ #use if you are not having traefik handle ssl
+      - ./themes:/opt/keycloak/themes #mounts an external directory for customizing themes
+    ports:
+      - "8443:8443"
+      #- "8080:8080" #for use when using keycloak to handle ssl
+    depends_on:
+      - db
+    command: "start" # Other options include start-dev and start --optimized see docs
+    restart: always
 
-networks:
-  default:
-    name: traefik_net
-
+  db:
+    image: postgres:latest
+    environment:
+      - POSTGRES_DB=keycloak
+      - POSTGRES_USER=${KC_DB_USERNAME}
+      - POSTGRES_PASSWORD=${KC_DB_PASSWORD}
+    volumes:
+      - ./postgresconf/pg_hba.conf:/etc/postgresql/pg_hba.conf
+      - ./postgresconf/postgresql.conf:/etc/postgresql/postgresql.conf
+      - db-data:/var/lib/postgresql/data
+    networks:
+      - web
+    restart: always
 volumes:
-  pgdata:
-    driver: local
+  db-data:
+  traefik-logs:
+networks:
+  web:
+    driver: bridge
