@@ -1,0 +1,14 @@
+entryPoints:
+  web:
+    address: ":80"
+
+api:
+  dashboard: true
+
+providers:
+  file:
+    directory: "/etc/traefik"
+    watch: true
+
+log:
+  level: WARN

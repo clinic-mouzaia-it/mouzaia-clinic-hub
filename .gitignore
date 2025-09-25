@@ -6,3 +6,5 @@ pgdata/
 # Ignore Docker-related files
 *.pid
 *.log
+
+/letsencrypt
