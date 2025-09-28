@@ -26,6 +26,15 @@ services:
     networks:
       - web
 
+  krakend:
+    build: ./krakend
+    image: clinic-hub-krakend:v0.1.0
+    ports:
+      - "8080:8080" # KrakenD Gateway
+    restart: always
+    networks:
+      - web
+
 networks:
   web:
     driver: bridge

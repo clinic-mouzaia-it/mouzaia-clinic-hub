@@ -20,8 +20,19 @@ http:
       entryPoints:
         - web
 
+    krakend-gateway:
+      rule: "Host(`hubapi.mouzaiaclinic.local`)"
+      service: krakend-gateway-svc
+      entryPoints:
+        - web
+
   services:
     keycloak-svc:
       loadBalancer:
         servers:
           - url: "http://keycloak:8080"
+
+    krakend-gateway-svc:
+      loadBalancer:
+        servers:
+          - url: "http://krakend:8080"

@@ -1,0 +1,49 @@
+{
+    "version": 3,
+    "name": "Clinic Hub API Gateway",
+    "port": 8080,
+    "timeout": "3000ms",
+    "cache_ttl": "300s",
+    "output_encoding": "json",
+    "endpoints": [
+        {
+            "endpoint": "/health",
+            "method": "GET",
+            "backend": [
+                {
+                    "url_pattern": "/json",
+                    "host": [
+                        "https://httpbin.org"
+                    ],
+                    "disable_host_sanitize": true
+                }
+            ]
+        },
+        {
+            "endpoint": "/api/{path}",
+            "method": "GET",
+            "backend": [
+                {
+                    "url_pattern": "/{path}",
+                    "host": [
+                        "https://httpbin.org"
+                    ],
+                    "disable_host_sanitize": true
+                }
+            ]
+        },
+        {
+            "endpoint": "/status",
+            "method": "GET",
+            "backend": [
+                {
+                    "url_pattern": "/status/200",
+                    "host": [
+                        "https://httpbin.org"
+                    ],
+                    "disable_host_sanitize": true
+                }
+            ]
+        }
+    ]
+}
