@@ -41,5 +41,5 @@ start_or_replace traefik -p 80:80 clinic-hub-traefik:v0.1.0
 
 echo "[clinic-hub] All services are up."
 echo "Traefik:  http://hubtraefik.mouzaiaclinic.local (admin/admin)"
-echo "Keycloak: http://hubkeycloak.mouzaiaclinic.local"
+echo "Keycloak: http://hubkeycloak.mouzaiaclinic.local (admin/admin)"
 echo "Postgres: host hubpostgres.mouzaiaclinic.local, port 5432, db clinic-mouzaia-hub, user admin, password admin"
