@@ -1,0 +1,78 @@
+{
+    "version": 3,
+    "name": "Clinic Hub API Gateway",
+    "port": 8080,
+    "timeout": "3000ms",
+    "cache_ttl": "300s",
+    "output_encoding": "json",
+    "endpoints": [
+        {
+            "endpoint": "/health",
+            "method": "GET",
+            "backend": [
+                {
+                    "url_pattern": "/",
+                    "host": [
+                        "http://keycloak:8080"
+                    ],
+                    "encoding": "no-op",
+                    "extra_config": {
+                        "modifier/response-body": {
+                            "type": "inline",
+                            "content": "{\"health\":\"ok\"}"
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "endpoint": "/api/{path}",
+            "method": "GET",
+            "extra_config": {
+                "auth/validator": {
+                    "alg": "RS256",
+                    "jwk_url": "http://keycloak:8080/realms/clinic-mouzaia-hub/protocol/openid-connect/certs",
+                    "issuer": "http://hubkeycloak.mouzaiaclinic.local/realms/clinic-mouzaia-hub",
+                    "roles_key": "resource_access.krakend-gateway.roles",
+                    "roles_key_is_nested": true,
+                    "roles": [
+                        "client-user"
+                    ],
+                    "cache": true,
+                    "disable_jwk_security": true,
+                    "operation_debug": true,
+                    "propagate_claims": [
+                        [
+                            "sub",
+                            "X-User"
+                        ],
+                        [
+                            "resource_access.krakend-gateway.roles",
+                            "X-Roles"
+                        ]
+                    ]
+                }
+            },
+            "input_headers": [
+                "Authorization",
+                "X-User",
+                "X-Roles"
+            ],
+            "backend": [
+                {
+                    "url_pattern": "/",
+                    "host": [
+                        "http://keycloak:8080"
+                    ],
+                    "encoding": "no-op",
+                    "extra_config": {
+                        "modifier/response-body": {
+                            "type": "inline",
+                            "content": "{\"status\":\"ok\",\"secured\":true}"
+                        }
+                    }
+                }
+            ]
+        }
+    ]
+}
