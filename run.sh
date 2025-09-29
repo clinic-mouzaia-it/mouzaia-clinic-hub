@@ -34,7 +34,7 @@ until docker exec db pg_isready -U admin >/dev/null 2>&1; do
 done
 
 echo "[clinic-hub] Starting Keycloak..."
-start_or_replace keycloak -v "$KEYCLOAK_VOLUME:/opt/keycloak/data" clinic-hub-keycloak:v0.1.0
+start_or_replace keycloak -p 8081:8080 -v "$KEYCLOAK_VOLUME:/opt/keycloak/data" clinic-hub-keycloak:v0.1.0
 
 echo "[clinic-hub] Starting KrakenD..."
 start_or_replace krakend -p 8080:8080 clinic-hub-krakend:v0.1.0
@@ -44,6 +44,6 @@ start_or_replace traefik -p 80:80 clinic-hub-traefik:v0.1.0
 
 echo "[clinic-hub] All services are up."
 echo "Traefik:  http://hubtraefik.mouzaiaclinic.local (admin/admin)"
-echo "Keycloak: http://hubkeycloak.mouzaiaclinic.local (admin/admin)"
+echo "Keycloak: http://hubkeycloak.mouzaiaclinic.local or http://localhost:8081 (admin/admin)"
 echo "KrakenD Gateway: http://hubapi.mouzaiaclinic.local"
 echo "Postgres: host hubpostgres.mouzaiaclinic.local, port 5432, db clinic-mouzaia-hub, user admin, password admin"

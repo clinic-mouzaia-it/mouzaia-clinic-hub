@@ -32,6 +32,24 @@
             "redirectUris": [
                 "*"
             ]
+        },
+        {
+            "clientId": "test-app",
+            "protocol": "openid-connect",
+            "publicClient": true,
+            "standardFlowEnabled": false,
+            "implicitFlowEnabled": true,
+            "directAccessGrantsEnabled": false,
+            "serviceAccountsEnabled": false,
+            "redirectUris": [
+                "http://hubtest.mouzaiaclinic.local/*"
+            ],
+            "webOrigins": [
+                "http://hubtest.mouzaiaclinic.local"
+            ],
+            "attributes": {
+                "post.logout.redirect.uris": "http://hubtest.mouzaiaclinic.local/*"
+            }
         }
     ]
 }

@@ -8,3 +8,5 @@ pgdata/
 *.log
 
 /letsencrypt
+/test-clinic-hub-integration/node_modules
+/test-clinic-hub-integration

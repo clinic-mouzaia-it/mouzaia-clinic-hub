@@ -19,6 +19,11 @@ http:
       service: keycloak-svc
       entryPoints:
         - web
+    test-app:
+      rule: "Host(`hubtest.mouzaiaclinic.local`)"
+      service: test-app-svc
+      entryPoints:
+        - web
 
     krakend-gateway:
       rule: "Host(`hubapi.mouzaiaclinic.local`)"
@@ -36,3 +41,8 @@ http:
       loadBalancer:
         servers:
           - url: "http://krakend:8080"
+
+    test-app-svc:
+      loadBalancer:
+        servers:
+          - url: "http://test-app:80"
