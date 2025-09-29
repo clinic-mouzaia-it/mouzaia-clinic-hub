@@ -12,7 +12,10 @@ ENV KEYCLOAK_ADMIN=admin \
     KC_PROXY_HEADERS=xforwarded \
     KC_HOSTNAME_STRICT=false
 
+# Preload realm import (filename must match `<realm>-realm.json`)
+COPY clinic-mouzaia-hub-realm.json /opt/keycloak/data/import/clinic-mouzaia-hub-realm.json
+
 EXPOSE 8080
 
-CMD ["start"]
+CMD ["start", "--import-realm"]
 

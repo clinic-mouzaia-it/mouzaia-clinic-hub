@@ -1,4 +1,4 @@
-FROM devopsfaith/krakend:2.5
+FROM krakend:2.11.0
 
 # Copy KrakenD configuration
 COPY krakend.json /etc/krakend/krakend.json

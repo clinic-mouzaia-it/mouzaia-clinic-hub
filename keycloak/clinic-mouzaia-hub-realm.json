@@ -1,0 +1,37 @@
+{
+    "realm": "clinic-mouzaia-hub",
+    "enabled": true,
+    "registrationAllowed": false,
+    "loginWithEmailAllowed": true,
+    "duplicateEmailsAllowed": false,
+    "resetPasswordAllowed": false,
+    "passwordPolicy": "length(8)",
+    "roles": {
+        "realm": [
+            {
+                "name": "user",
+                "description": "Regular user"
+            },
+            {
+                "name": "admin",
+                "description": "Administrator"
+            }
+        ]
+    },
+    "clients": [
+        {
+            "clientId": "krakend-gateway",
+            "protocol": "openid-connect",
+            "publicClient": true,
+            "directAccessGrantsEnabled": true,
+            "standardFlowEnabled": true,
+            "serviceAccountsEnabled": false,
+            "attributes": {
+                "post.logout.redirect.uris": "+"
+            },
+            "redirectUris": [
+                "*"
+            ]
+        }
+    ]
+}
