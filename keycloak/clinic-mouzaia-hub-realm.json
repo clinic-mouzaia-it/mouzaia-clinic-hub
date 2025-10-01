@@ -22,10 +22,10 @@
         {
             "clientId": "krakend-gateway",
             "protocol": "openid-connect",
-            "publicClient": true,
+            "publicClient": false,
             "directAccessGrantsEnabled": true,
             "standardFlowEnabled": true,
-            "serviceAccountsEnabled": false,
+            "serviceAccountsEnabled": true,
             "attributes": {
                 "post.logout.redirect.uris": "+"
             },
@@ -37,18 +37,19 @@
             "clientId": "test-app",
             "protocol": "openid-connect",
             "publicClient": true,
-            "standardFlowEnabled": false,
-            "implicitFlowEnabled": true,
+            "standardFlowEnabled": true,
+            "implicitFlowEnabled": false,
             "directAccessGrantsEnabled": false,
             "serviceAccountsEnabled": false,
             "redirectUris": [
+                "http://localhost:3000/*",
                 "http://hubtest.mouzaiaclinic.local/*"
             ],
             "webOrigins": [
-                "http://hubtest.mouzaiaclinic.local"
+                "*"
             ],
             "attributes": {
-                "post.logout.redirect.uris": "http://hubtest.mouzaiaclinic.local/*"
+                "post.logout.redirect.uris": "+"
             }
         }
     ]

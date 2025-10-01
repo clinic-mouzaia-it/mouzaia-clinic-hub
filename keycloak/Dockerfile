@@ -6,10 +6,8 @@ ENV KEYCLOAK_ADMIN=admin \
     KC_DB_URL=jdbc:postgresql://db:5432/keycloak \
     KC_DB_USERNAME=admin \
     KC_DB_PASSWORD=admin \
-    KC_HOSTNAME=hubkeycloak.mouzaiaclinic.local \
     KC_HTTP_ENABLED=true \
     KC_HTTP_PORT=8080 \
-    KC_PROXY_HEADERS=xforwarded \
     KC_HOSTNAME_STRICT=false
 
 # Preload realm import (filename must match `<realm>-realm.json`)
