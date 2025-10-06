@@ -8,3 +8,4 @@ pgdata/
 *.log
 
 /letsencrypt
+/services/identity-service/node_modules

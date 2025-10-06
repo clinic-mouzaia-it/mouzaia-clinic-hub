@@ -8,25 +8,21 @@
     "endpoints": [
         {
             "endpoint": "/health",
+            "output_encoding": "no-op",
             "method": "GET",
             "backend": [
                 {
-                    "url_pattern": "/",
+                    "url_pattern": "/health",
                     "host": [
-                        "http://keycloak:8080"
+                        "http://identity-service:4000"
                     ],
-                    "encoding": "no-op",
-                    "extra_config": {
-                        "modifier/response-body": {
-                            "type": "inline",
-                            "content": "{\"health\":\"ok\"}"
-                        }
-                    }
+                    "encoding": "no-op"
                 }
             ]
         },
         {
-            "endpoint": "/api/{path}",
+            "endpoint": "/authz-test",
+            "output_encoding": "no-op",
             "method": "GET",
             "extra_config": {
                 "auth/validator": {
@@ -36,39 +32,27 @@
                     "roles_key": "resource_access.krakend-gateway.roles",
                     "roles_key_is_nested": true,
                     "roles": [
-                        "client-user"
+                        "api-user"
                     ],
                     "cache": true,
-                    "disable_jwk_security": true,
                     "operation_debug": true,
-                    "propagate_claims": [
-                        [
-                            "sub",
-                            "X-User"
-                        ],
-                        [
-                            "resource_access.krakend-gateway.roles",
-                            "X-Roles"
-                        ]
-                    ]
+                    "disable_jwk_security": true
                 }
             },
             "input_headers": [
-                "Authorization",
-                "X-User",
-                "X-Roles"
+                "Authorization"
             ],
             "backend": [
                 {
-                    "url_pattern": "/",
+                    "url_pattern": "/health",
                     "host": [
-                        "http://keycloak:8080"
+                        "http://identity-service:4000"
                     ],
                     "encoding": "no-op",
                     "extra_config": {
                         "modifier/response-body": {
                             "type": "inline",
-                            "content": "{\"status\":\"ok\",\"secured\":true}"
+                            "content": "{\"ok\":true,\"endpoint\":\"authz-test\"}"
                         }
                     }
                 }

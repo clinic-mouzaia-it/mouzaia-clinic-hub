@@ -1,0 +1,47 @@
+_format_version: "3.0"
+_transform: true
+
+services:
+  # ------------------------------
+  # 1️⃣ Identity Service
+  # ------------------------------
+  - name: identity-service
+    url: http://identity-service:4000
+    routes:
+      - name: identity-health-route
+        hosts:
+          - hubapi.mouzaiaclinic.local
+        paths:
+          - /health
+        strip_path: false
+
+  - name: localhost-dummy-service
+    url: http://localhost # dummy upstream, never used
+    routes:
+      - name: hello-route-localhost
+        hosts:
+          - localhost
+        paths:
+          - /localhost-test
+        strip_path: false
+    plugins:
+      - name: request-termination
+        config:
+          status_code: 200
+          content_type: "application/json"
+          body: '{"message":"Hello World from Kong Gateway localhost"}'
+  - name: hubapi-dummy-service
+    url: http://hubapi.mouzaiaclinic.local # dummy upstream, never used
+    routes:
+      - name: hello-route-hubapi
+        hosts:
+          - hubapi.mouzaiaclinic.local
+        paths:
+          - /hubapi-test
+        strip_path: false
+    plugins:
+      - name: request-termination
+        config:
+          status_code: 200
+          content_type: "application/json"
+          body: '{"message":"Hello World from Kong Gateway hubapi"}'

@@ -1,35 +1,76 @@
 {
     "realm": "clinic-mouzaia-hub",
     "enabled": true,
-    "registrationAllowed": false,
-    "loginWithEmailAllowed": true,
-    "duplicateEmailsAllowed": false,
-    "resetPasswordAllowed": false,
-    "passwordPolicy": "length(8)",
     "roles": {
-        "realm": [
-            {
-                "name": "user",
-                "description": "Regular user"
-            },
-            {
-                "name": "admin",
-                "description": "Administrator"
-            }
-        ]
+        "client": {
+            "identity-service": [
+                {
+                    "name": "read_users",
+                    "description": "Allows calling /users through Kong Gateway",
+                    "composite": false,
+                    "clientRole": true
+                },
+                {
+                    "name": "read_profile",
+                    "description": "Allows calling /profile through Kong Gateway",
+                    "composite": false,
+                    "clientRole": true
+                }
+            ],
+            "krakend-gateway": [
+                {
+                    "name": "api-user",
+                    "description": "Allows calling protected endpoints at KrakenD",
+                    "composite": false,
+                    "clientRole": true
+                }
+            ]
+        }
     },
+    "users": [
+        {
+            "username": "service-account-identity-service",
+            "enabled": true,
+            "serviceAccountClientId": "identity-service",
+            "realmRoles": [],
+            "clientRoles": {
+                "realm-management": [
+                    "view-users",
+                    "query-users"
+                ]
+            }
+        }
+    ],
     "clients": [
         {
+            "clientId": "identity-service",
+            "enabled": true,
+            "protocol": "openid-connect",
+            "publicClient": false,
+            "directAccessGrantsEnabled": false,
+            "standardFlowEnabled": false,
+            "serviceAccountsEnabled": true,
+            "bearerOnly": false,
+            "attributes": {
+                "client_credentials.use_refresh_token": "false"
+            },
+            "redirectUris": [],
+            "webOrigins": []
+        },
+        {
             "clientId": "krakend-gateway",
+            "enabled": true,
             "protocol": "openid-connect",
             "publicClient": true,
             "directAccessGrantsEnabled": true,
             "standardFlowEnabled": true,
             "serviceAccountsEnabled": false,
-            "attributes": {
-                "post.logout.redirect.uris": "+"
-            },
+            "bearerOnly": false,
             "redirectUris": [
+                "http://localhost/*",
+                "http://hubapi.mouzaiaclinic.local/*"
+            ],
+            "webOrigins": [
                 "*"
             ]
         }

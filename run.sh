@@ -1,49 +1,100 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-NETWORK_NAME=web
-POSTGRES_VOLUME=clinic-hub-postgres-db-data
-KEYCLOAK_VOLUME=clinic-hub-keycloak-data
+# Run stack with Docker Compose, using positional syntax: action then services
 
-echo "[clinic-hub] Ensuring network '$NETWORK_NAME' exists..."
-docker network inspect "$NETWORK_NAME" >/dev/null 2>&1 || docker network create "$NETWORK_NAME"
+usage() {
+  cat <<'USAGE'
+Usage: bash run.sh [action] [services...]
 
-echo "[clinic-hub] Ensuring volume '$POSTGRES_VOLUME' exists..."
-docker volume inspect "$POSTGRES_VOLUME" >/dev/null 2>&1 || docker volume create "$POSTGRES_VOLUME" >/dev/null
+Actions (default: up):
+  build               Build images for selected services (or all if none)
+  up                  Bring up services (detached)
+  down                Stop and remove services; with no services, bring the whole stack down
+  restart             Restart services (or all if none)
+  kill                Force stop services
+  remove              Remove stopped service containers
 
-echo "[clinic-hub] Ensuring volume '$KEYCLOAK_VOLUME' exists..."
-docker volume inspect "$KEYCLOAK_VOLUME" >/dev/null 2>&1 || docker volume create "$KEYCLOAK_VOLUME" >/dev/null
-
-start_or_replace() {
-    local name="$1"
-    shift
-    if docker ps -a --format '{{.Names}}' | grep -qx "$name"; then
-        echo "[clinic-hub] Removing existing container: $name"
-        docker rm -f "$name" >/dev/null 2>&1 || true
-    fi
-    echo "[clinic-hub] Starting: $name"
-    docker run -d --restart unless-stopped --name "$name" --network "$NETWORK_NAME" "$@"
+Examples:
+  bash run.sh up                              # up all
+  bash run.sh up keycloak postgres            # up only Keycloak and Postgres
+  bash run.sh down keycloak postgres          # stop and remove only those services
+  bash run.sh restart                         # restart all
+  bash run.sh build identity-service          # build only identity-service
+USAGE
 }
 
-echo "[clinic-hub] Starting Postgres..."
-start_or_replace db -p 5432:5432 -v "$POSTGRES_VOLUME:/var/lib/postgresql/data" clinic-hub-postgres:v0.1.0
+# Determine compose command (Docker Compose v2 preferred)
+if docker compose version >/dev/null 2>&1; then
+  COMPOSE_CMD=(docker compose)
+elif command -v docker-compose >/dev/null 2>&1; then
+  COMPOSE_CMD=(docker-compose)
+else
+  echo "Error: Docker Compose is required. Install Docker Desktop or docker-compose plugin." >&2
+  exit 1
+fi
 
-echo "[clinic-hub] Waiting for Postgres to be ready..."
-until docker exec db pg_isready -U admin >/dev/null 2>&1; do
-    sleep 1
-done
+ACTION="${1:-up}"
+if [[ "$ACTION" == "-h" || "$ACTION" == "--help" ]]; then
+  usage; exit 0
+fi
+shift || true
+SERVICES=("$@")
 
-echo "[clinic-hub] Starting Keycloak..."
-start_or_replace keycloak -v "$KEYCLOAK_VOLUME:/opt/keycloak/data" clinic-hub-keycloak:v0.1.0
+# Helper to conditionally append services
+compose_with_services() {
+  if [[ ${#SERVICES[@]} -gt 0 ]]; then
+    "${COMPOSE_CMD[@]}" "$@" "${SERVICES[@]}"
+  else
+    "${COMPOSE_CMD[@]}" "$@"
+  fi
+}
 
-echo "[clinic-hub] Starting KrakenD..."
-start_or_replace krakend -p 8080:8080 clinic-hub-krakend:v0.1.0
+case "$ACTION" in
+  up)
+    echo "[clinic-hub] Bringing up services (detached)..."
+    compose_with_services up -d --remove-orphans
+    ;;
+  down)
+    if [[ ${#SERVICES[@]} -eq 0 ]]; then
+      echo "[clinic-hub] Bringing down the entire stack..."
+      "${COMPOSE_CMD[@]}" down
+    else
+      echo "[clinic-hub] Stopping selected services..."
+      compose_with_services stop
+      echo "[clinic-hub] Removing selected service containers..."
+      compose_with_services rm -fsv
+    fi
+    ;;
+  restart)
+    echo "[clinic-hub] Restarting services..."
+    compose_with_services restart
+    ;;
+  kill)
+    echo "[clinic-hub] Force stopping services..."
+    compose_with_services kill
+    ;;
+  remove)
+    echo "[clinic-hub] Removing service containers..."
+    compose_with_services rm -fsv
+    ;;
+  build)
+    compose_with_services build
+    ;;
+  *)
+    echo "Unknown action: $ACTION" >&2
+    usage; exit 2 ;;
+esac
 
-echo "[clinic-hub] Starting Traefik..."
-start_or_replace traefik -p 80:80 clinic-hub-traefik:v0.1.0
+if [[ "$ACTION" == "up" ]]; then
+  echo
+  echo "[clinic-hub] Services are starting. If it's the first run, Postgres initialization can take ~10-20s."
+  echo "Traefik:  http://hubtraefik.mouzaiaclinic.local (admin/admin)"
+  echo "Keycloak: http://hubkeycloak.mouzaiaclinic.local (admin/admin)"
+  echo "Kong Gateway (through Traefik): http://hubapi.mouzaiaclinic.local"
+  echo "Kong Gateway (direct, bypass Traefik): http://localhost:8000"
+  echo "  Tip: the sample route requires Host header and path '/test'. Try:"
+  echo "  curl -i -H 'Host: hubapi.mouzaiaclinic.local' http://localhost:8000/test"
+  echo "Postgres: host hubpostgres.mouzaiaclinic.local, port 5432, db clinic-mouzaia-hub, user admin, password admin"
+fi
 
-echo "[clinic-hub] All services are up."
-echo "Traefik:  http://hubtraefik.mouzaiaclinic.local (admin/admin)"
-echo "Keycloak: http://hubkeycloak.mouzaiaclinic.local (admin/admin)"
-echo "KrakenD Gateway: http://hubapi.mouzaiaclinic.local"
-echo "Postgres: host hubpostgres.mouzaiaclinic.local, port 5432, db clinic-mouzaia-hub, user admin, password admin"
