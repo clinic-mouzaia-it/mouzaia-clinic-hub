@@ -157,23 +157,103 @@ app.get("/debug-token", (req: Request, res: Response) => {
 });
 
 // GET /users - requires client role read_users under identity-service
+// app.get("/users", auth, async (req: Request, res: Response) => {
+// 	const claims = (req as unknown as { claims: KeycloakClaims }).claims;
+// 	if (!hasClientRole(claims, SERVICE_CLIENT_ID, "read_users")) {
+// 		return res.status(403).json({ error: "forbidden" });
+// 	}
+
+// 	try {
+// 		const adminToken = await getAdminToken();
+// 		const usersUrl = `${KEYCLOAK_BASE_URL}/admin/realms/${REALM}/users`;
+// 		const resp = await fetch(usersUrl, {
+// 			headers: { Authorization: `Bearer ${adminToken}` },
+// 		});
+// 		if (!resp.ok) {
+// 			const text = await resp.text().catch(() => "");
+// 			return res.status(502).json({ error: "upstream_error", details: text });
+// 		}
+// 		// Keycloak user representation is broad; select safe fields
+// 		const raw = (await resp.json()) as Array<{
+// 			id: string;
+// 			username: string;
+// 			email?: string;
+// 			firstName?: string;
+// 			lastName?: string;
+// 		}>;
+// 		const sanitized: KeycloakUser[] = raw.map((u) => ({
+// 			id: u.id,
+// 			username: u.username,
+// 			email: u.email,
+// 			firstName: u.firstName,
+// 			lastName: u.lastName,
+// 		}));
+// 		return res.json(sanitized);
+// 	} catch (err) {
+// 		return res
+// 			.status(500)
+// 			.json({ error: "server_error", message: (err as Error).message });
+// 	}
+// });
+
+// GET /users - requires client role read_users under identity-service
 app.get("/users", auth, async (req: Request, res: Response) => {
 	const claims = (req as unknown as { claims: KeycloakClaims }).claims;
-	if (!hasClientRole(claims, SERVICE_CLIENT_ID, "read_users")) {
-		return res.status(403).json({ error: "forbidden" });
+
+	console.log("=== /users called ===");
+	console.log(
+		"Decoded claims (krakend forwarded):",
+		JSON.stringify(claims, null, 2)
+	);
+
+	const hasReadUsers = hasClientRole(claims, SERVICE_CLIENT_ID, "read_users");
+	console.log(
+		`hasClientRole(${SERVICE_CLIENT_ID}, read_users) => ${hasReadUsers}`
+	);
+
+	// Short-circuit debug: do not call Keycloak if debug query param supplied
+	if (req.query.debug === "1") {
+		return res.status(200).json({
+			debug: true,
+			ok: hasReadUsers,
+			message: hasReadUsers
+				? "caller has read_users role (debug mode)"
+				: "caller missing read_users role (debug mode)",
+			claims_preview: {
+				sub: claims?.sub,
+				preferred_username: claims?.preferred_username,
+				resource_access: claims?.resource_access,
+			},
+		});
+	}
+
+	// Enforce service-role check at service level
+	if (!hasReadUsers) {
+		console.warn(
+			"Forbidden: caller does not have identity-service client role 'read_users'"
+		);
+		return res
+			.status(403)
+			.json({ error: "forbidden", reason: "missing_client_role:read_users" });
 	}
 
 	try {
 		const adminToken = await getAdminToken();
+		console.log("Obtained admin token (length):", adminToken?.length ?? null);
+
 		const usersUrl = `${KEYCLOAK_BASE_URL}/admin/realms/${REALM}/users`;
 		const resp = await fetch(usersUrl, {
 			headers: { Authorization: `Bearer ${adminToken}` },
 		});
+
+		console.log(`/admin/users upstream status: ${resp.status}`);
+
 		if (!resp.ok) {
 			const text = await resp.text().catch(() => "");
+			console.error("Upstream Keycloak error:", resp.status, text);
 			return res.status(502).json({ error: "upstream_error", details: text });
 		}
-		// Keycloak user representation is broad; select safe fields
+
 		const raw = (await resp.json()) as Array<{
 			id: string;
 			username: string;
@@ -181,6 +261,7 @@ app.get("/users", auth, async (req: Request, res: Response) => {
 			firstName?: string;
 			lastName?: string;
 		}>;
+
 		const sanitized: KeycloakUser[] = raw.map((u) => ({
 			id: u.id,
 			username: u.username,
@@ -188,8 +269,11 @@ app.get("/users", auth, async (req: Request, res: Response) => {
 			firstName: u.firstName,
 			lastName: u.lastName,
 		}));
+
+		// Successful response
 		return res.json(sanitized);
 	} catch (err) {
+		console.error("Server error in /users:", (err as Error).message);
 		return res
 			.status(500)
 			.json({ error: "server_error", message: (err as Error).message });

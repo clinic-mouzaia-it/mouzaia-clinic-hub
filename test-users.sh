@@ -10,7 +10,13 @@ PASSWORD="useruser"
 TOKEN_URL="$KEYCLOAK_HOST/realms/$REALM/protocol/openid-connect/token"
 
 API_HOST="http://hubapi.mouzaiaclinic.local"
-ENDPOINT="/authz-test"
+ENDPOINT="/users"
+
+# Optional flag: --debug to hit /users?debug=1
+if [[ "${1:-}" == "--debug" ]]; then
+  ENDPOINT="$ENDPOINT?debug=1"
+  echo "[Debug mode enabled: calling $ENDPOINT]"
+fi
 
 # Check for jq
 if ! command -v jq >/dev/null 2>&1; then
@@ -48,6 +54,9 @@ printf "%s" "$DECODED" | jq '{sub, iss, exp, resource_access}'
 
 printf "\nRoles under client krakend-gateway:\n"
 printf "%s" "$DECODED" | jq -r '.resource_access["krakend-gateway"].roles // [] | join(", ")'
+
+printf "\nRoles under client identity-service:\n"
+printf "%s" "$DECODED" | jq -r '.resource_access["identity-service"].roles // [] | join(", ")'
 
 # Call the protected endpoint
 printf "\nCalling %s%s ...\n" "$API_HOST" "$ENDPOINT"
