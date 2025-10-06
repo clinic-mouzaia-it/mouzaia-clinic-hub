@@ -10,7 +10,7 @@ PASSWORD="useruser"
 TOKEN_URL="$KEYCLOAK_HOST/realms/$REALM/protocol/openid-connect/token"
 
 API_HOST="http://hubapi.mouzaiaclinic.local"
-ENDPOINT="/authz-test"
+ENDPOINT="/debug-token"
 
 # Check for jq
 if ! command -v jq >/dev/null 2>&1; then

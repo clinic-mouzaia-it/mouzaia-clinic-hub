@@ -131,6 +131,31 @@ app.get("/health", (_req: Request, res: Response) => {
 	res.status(200).json({ status: "ok" });
 });
 
+// DEBUG endpoint: echoes headers and token info to verify KrakenD forwarding
+app.get("/debug-token", (req: Request, res: Response) => {
+	const authHeader = req.headers.authorization || "(none)";
+	let decoded: unknown = null;
+
+	if (authHeader.startsWith("Bearer ")) {
+		const token = authHeader.slice("Bearer ".length);
+		try {
+			decoded = jwt.decode(token);
+		} catch (err) {
+			decoded = { error: (err as Error).message };
+		}
+	}
+
+	console.log("=== /debug-token called ===");
+	console.log("Headers:", req.headers);
+
+	res.status(200).json({
+		message: "Debug endpoint hit",
+		authHeader,
+		decoded,
+		headers: req.headers,
+	});
+});
+
 // GET /users - requires client role read_users under identity-service
 app.get("/users", auth, async (req: Request, res: Response) => {
 	const claims = (req as unknown as { claims: KeycloakClaims }).claims;
