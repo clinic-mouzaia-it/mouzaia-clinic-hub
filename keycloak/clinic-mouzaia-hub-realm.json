@@ -24,6 +24,20 @@
                     "composite": false,
                     "clientRole": true
                 }
+            ],
+            "pharmacy": [
+                {
+                    "name": "pharmacist",
+                    "description": "Allows pharmacists to access pharmacy resources",
+                    "composite": false,
+                    "clientRole": true
+                },
+                {
+                    "name": "allowed_to_take_medicines",
+                    "description": "Staff allowed to take medicines",
+                    "composite": false,
+                    "clientRole": true
+                }
             ]
         }
     },
@@ -39,6 +53,86 @@
                     "query-users"
                 ]
             }
+        },
+        {
+            "username": "pharmacist",
+            "enabled": true,
+            "emailVerified": true,
+            "firstName": "Pharmacist",
+            "lastName": "Pharmacist",
+            "email": "pharmacist@pharmacy.com",
+            "attributes": {
+                "national_id": [
+                    "P-0001"
+                ]
+            },
+            "realmRoles": [],
+            "clientRoles": {
+                "pharmacy": [
+                    "pharmacist"
+                ],
+                "krakend-gateway": [
+                    "api-user"
+                ],
+                "identity-service": [
+                    "read_users"
+                ]
+            },
+            "credentials": [
+                {
+                    "type": "password",
+                    "value": "DummyPassword123!",
+                    "temporary": false
+                }
+            ]
+        },
+        {
+            "username": "staff1",
+            "enabled": true,
+            "emailVerified": true,
+            "firstName": "Staff",
+            "lastName": "One",
+            "email": "staff1@pharmacy.com",
+            "attributes": {
+                "national_id": [
+                    "S1-0001"
+                ]
+            },
+            "realmRoles": [],
+            "clientRoles": {
+                "pharmacy": [
+                    "allowed_to_take_medicines"
+                ]
+            },
+            "credentials": [
+                {
+                    "type": "password",
+                    "value": "DummyPass1!",
+                    "temporary": false
+                }
+            ]
+        },
+        {
+            "username": "staff2",
+            "enabled": true,
+            "emailVerified": true,
+            "firstName": "Staff",
+            "lastName": "Two",
+            "email": "staff2@pharmacy.com",
+            "attributes": {
+                "national_id": [
+                    "S2-0002"
+                ]
+            },
+            "realmRoles": [],
+            "clientRoles": {},
+            "credentials": [
+                {
+                    "type": "password",
+                    "value": "DummyPass2!",
+                    "temporary": false
+                }
+            ]
         }
     ],
     "clients": [
@@ -59,6 +153,23 @@
         },
         {
             "clientId": "krakend-gateway",
+            "enabled": true,
+            "protocol": "openid-connect",
+            "publicClient": true,
+            "directAccessGrantsEnabled": true,
+            "standardFlowEnabled": true,
+            "serviceAccountsEnabled": false,
+            "bearerOnly": false,
+            "redirectUris": [
+                "http://localhost/*",
+                "http://hubapi.mouzaiaclinic.local/*"
+            ],
+            "webOrigins": [
+                "*"
+            ]
+        },
+        {
+            "clientId": "pharmacy",
             "enabled": true,
             "protocol": "openid-connect",
             "publicClient": true,

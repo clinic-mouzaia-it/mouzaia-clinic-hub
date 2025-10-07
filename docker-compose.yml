@@ -21,8 +21,6 @@ services:
     restart: always
     networks:
       - web
-    ports:
-      - "8888:8080"
 
   postgres:
     build: ./postgres
@@ -49,8 +47,8 @@ services:
     env_file:
       - .env
     ports:
-      - "8000:8000"   # HTTP proxy (direct access to Kong)
-      - "8443:8443"   # HTTPS proxy (direct access to Kong)
+      - "8000:8000" # HTTP proxy (direct access to Kong)
+      - "8443:8443" # HTTPS proxy (direct access to Kong)
     networks:
       - web
 
