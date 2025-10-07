@@ -8,4 +8,7 @@ pgdata/
 *.log
 
 /letsencrypt
-/services/identity-service/node_modules
+/services/identity-service/dist
+/services/pharmacy-service/dist
+/services/shared/dist
+/services/node_modules

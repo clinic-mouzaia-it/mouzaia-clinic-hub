@@ -1,13 +1,17 @@
 {
-  "name": "identity-service",
+  "name": "pharmacy-service",
   "version": "0.1.0",
   "private": true,
-  "description": "Minimal TypeScript + Express identity microservice",
+  "type": "commonjs",
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "start": "node dist/index.js",
     "dev": "ts-node-dev --respawn --transpile-only src/index.ts"
   },
-  "dependencies": {},
-  "devDependencies": {}
+  "dependencies": {
+    "@clinic/shared": "file:../shared"
+  },
+  "devDependencies": {
+    
+  }
 }

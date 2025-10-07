@@ -5,8 +5,8 @@ set -euo pipefail
 REALM="clinic-mouzaia-hub"
 KEYCLOAK_HOST="http://hubkeycloak.mouzaiaclinic.local"
 CLIENT_ID="krakend-gateway"
-USERNAME="testuser"
-PASSWORD="useruser"
+USERNAME="pharmacist"
+PASSWORD="DummyPassword123!"
 TOKEN_URL="$KEYCLOAK_HOST/realms/$REALM/protocol/openid-connect/token"
 
 API_HOST="http://hubapi.mouzaiaclinic.local"

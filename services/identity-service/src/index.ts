@@ -1,7 +1,8 @@
 import express, { Request, Response, NextFunction } from "express";
 import jwt, { JwtHeader } from "jsonwebtoken";
 import jwksRsa from "jwks-rsa";
-import type { KeycloakClaims, KeycloakUser } from "./types";
+import type { KeycloakClaims, KeycloakUser } from "@clinic/shared/types";
+import { decodeToken, hasClientRole as sharedHasClientRole } from "@clinic/shared/auth";
 
 // Express app for identity-service.
 // Defaults assume running behind Kong Gateway. If TRUST_GATEWAY=false, we validate JWTs locally.
@@ -81,21 +82,14 @@ function bearerFromAuthHeader(req: Request): string | null {
 	return null;
 }
 
-function hasClientRole(
-	claims: KeycloakClaims | undefined,
-	clientId: string,
-	role: string
-): boolean {
-	const roles = claims?.resource_access?.[clientId]?.roles || [];
-	return roles.includes(role);
-}
+const hasClientRole = sharedHasClientRole;
 
 async function verifyJwtIfNeeded(
 	token: string
 ): Promise<KeycloakClaims | null> {
 	if (TRUST_GATEWAY) {
 		// Behind Kong Gateway: decode only (Kong Gateway should have validated already)
-		const decoded = jwt.decode(token) as KeycloakClaims | null;
+		const decoded = decodeToken(token);
 		return decoded;
 	}
 

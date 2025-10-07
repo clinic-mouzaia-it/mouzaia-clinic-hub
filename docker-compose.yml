@@ -53,8 +53,24 @@ services:
       - web
 
   identity-service:
-    build: ./services/identity-service
+    build:
+      context: ./services
+      dockerfile: identity-service/Dockerfile
     image: clinic-hub-identity:v0.1.0
+    env_file:
+      - .env
+    depends_on:
+      keycloak:
+        condition: service_started
+    restart: always
+    networks:
+      - web
+
+  pharmacy-service:
+    build:
+      context: ./services
+      dockerfile: pharmacy-service/Dockerfile
+    image: clinic-hub-pharmacy:v0.1.0
     env_file:
       - .env
     depends_on:
