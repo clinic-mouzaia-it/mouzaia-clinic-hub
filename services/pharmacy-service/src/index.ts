@@ -11,13 +11,10 @@ const IDENTITY_BASE =
 function bearerFromAuthHeader(req: Request): string | null {
 	const auth = req.headers.authorization || "";
 	const [scheme, token] = auth.split(" ");
-	if (scheme?.toLowerCase() === "bearer" && token) return token;
-	return null;
+	return scheme?.toLowerCase() === "bearer" && token ? token : null;
 }
 
-app.get("/health", (_req: Request, res: Response) => {
-	res.json({ status: "ok" });
-});
+app.get("/health", (_req, res) => res.json({ status: "ok" }));
 
 app.post("/pharmacy/verify-staff", async (req: Request, res: Response) => {
 	const token = bearerFromAuthHeader(req);
@@ -26,26 +23,24 @@ app.post("/pharmacy/verify-staff", async (req: Request, res: Response) => {
 	const claims = decodeToken(token);
 	if (!claims) return res.status(401).json({ error: "invalid_token" });
 
-	// Placeholder logic: call identity-service debug/users to scaffold verification
 	try {
 		const resp = await fetch(`${IDENTITY_BASE}/users?debug=1`, {
 			headers: { Authorization: `Bearer ${token}` },
 		});
 		const data = await resp.json();
-		return res.json({ ok: true, fromIdentity: data });
+		return res.json({ ok: true, staffData: data });
 	} catch (err) {
 		return res.status(502).json({ ok: false, error: (err as Error).message });
 	}
 });
 
-app.get("/pharmacy/medicines", (_req: Request, res: Response) => {
+app.get("/pharmacy/medicines", (_req, res) => {
 	res.json([
 		{ id: "med-001", name: "Paracetamol 500mg", stock: 120 },
 		{ id: "med-002", name: "Ibuprofen 200mg", stock: 75 },
 	]);
 });
 
-app.listen(PORT, () => {
-	// eslint-disable-next-line no-console
-	console.log(`pharmacy-service listening on port ${PORT}`);
-});
+app.listen(PORT, () =>
+	console.log(`pharmacy-service listening on port ${PORT}`)
+);
