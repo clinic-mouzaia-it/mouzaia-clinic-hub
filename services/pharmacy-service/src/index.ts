@@ -1,5 +1,5 @@
 import express, { Request, Response } from "express";
-import { decodeToken } from "@clinic/shared/auth";
+import { decodeToken, hasClientRole } from "@clinic/shared/auth";
 
 const app = express();
 app.use(express.json());
@@ -34,8 +34,17 @@ app.post("/pharmacy/verify-staff", async (req: Request, res: Response) => {
 	}
 });
 
-app.get("/pharmacy/medicines", (_req, res) => {
-	res.json([
+app.get("/pharmacy/medicines", (req: Request, res: Response) => {
+	const token = bearerFromAuthHeader(req);
+	if (!token) return res.status(401).json({ error: "missing_token" });
+
+	const claims = decodeToken(token);
+	if (!claims) return res.status(401).json({ error: "invalid_token" });
+
+	const allowed = hasClientRole(claims, "pharmacy", "see-medicines");
+	if (!allowed) return res.status(403).json({ error: "forbidden" });
+
+	return res.json([
 		{ id: "med-001", name: "Paracetamol 500mg", stock: 120 },
 		{ id: "med-002", name: "Ibuprofen 200mg", stock: 75 },
 	]);

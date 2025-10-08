@@ -37,6 +37,12 @@
                     "description": "Staff allowed to take medicines",
                     "composite": false,
                     "clientRole": true
+                },
+                {
+                    "name": "see-medicines",
+                    "description": "Permission to list medicines via pharmacy service",
+                    "composite": false,
+                    "clientRole": true
                 }
             ]
         }
@@ -69,7 +75,8 @@
             "realmRoles": [],
             "clientRoles": {
                 "pharmacy": [
-                    "pharmacist"
+                    "pharmacist",
+                    "see-medicines"
                 ],
                 "krakend-gateway": [
                     "api-user"
