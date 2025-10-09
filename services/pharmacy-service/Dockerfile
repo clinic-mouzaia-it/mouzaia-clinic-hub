@@ -37,5 +37,5 @@ COPY --from=builder /app/pharmacy-service/dist ./dist
 # Ensure @clinic/shared resolves at runtime even if workspace symlinks are pruned
 COPY --from=builder /app/shared /app/node_modules/@clinic/shared
 
-EXPOSE 4100
+EXPOSE ${PHARMACY_SERVICE_PORT}
 CMD ["node", "dist/index.js"]

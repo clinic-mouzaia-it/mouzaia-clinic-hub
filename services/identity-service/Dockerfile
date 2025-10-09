@@ -40,7 +40,7 @@ COPY --from=builder /app/shared /app/node_modules/@clinic/shared
 ## @clinic/shared may also be present in the hoisted node_modules copied above.
 
 # Expose the app port (informational)
-EXPOSE 4000
+EXPOSE ${IDENTITY_SERVICE_PORT}
 
 # Run the app
 CMD ["node", "dist/index.js"]
