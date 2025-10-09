@@ -39,19 +39,6 @@ services:
     restart: always
     networks:
       - web
-
-  kong:
-    build: ./kong
-    image: clinic-hub-kong:v0.1.0
-    restart: always
-    env_file:
-      - .env
-    ports:
-      - "8000:8000" # HTTP proxy (direct access to Kong)
-      - "8443:8443" # HTTPS proxy (direct access to Kong)
-    networks:
-      - web
-
   identity-service:
     build:
       context: ./services

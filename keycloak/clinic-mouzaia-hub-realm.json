@@ -6,13 +6,13 @@
             "identity-service": [
                 {
                     "name": "read_users",
-                    "description": "Allows calling /users through Kong Gateway",
+                    "description": "Allows calling /users through KrakenD Gateway",
                     "composite": false,
                     "clientRole": true
                 },
                 {
                     "name": "read_profile",
-                    "description": "Allows calling /profile through Kong Gateway",
+                    "description": "Allows calling /profile through KrakenD Gateway",
                     "composite": false,
                     "clientRole": true
                 }
@@ -152,6 +152,7 @@
             "standardFlowEnabled": false,
             "serviceAccountsEnabled": true,
             "bearerOnly": false,
+            "secret": "${IDENTITY_SERVICE_CLIENT_SECRET}",
             "attributes": {
                 "client_credentials.use_refresh_token": "false"
             },

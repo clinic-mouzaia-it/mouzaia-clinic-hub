@@ -10,9 +10,10 @@ app.use(express.json());
 const KEYCLOAK_BASE_URL =
 	process.env.KEYCLOAK_BASE_URL || "http://keycloak:8080";
 const REALM = process.env.REALM || "clinic-mouzaia-hub";
-const SERVICE_CLIENT_ID = process.env.SERVICE_CLIENT_ID || "identity-service";
-const SERVICE_CLIENT_SECRET =
-	process.env.SERVICE_CLIENT_SECRET || "EXAMPLE_REPLACE_ME";
+const IDENTITY_SERVICE_CLIENT_ID =
+	process.env.IDENTITY_SERVICE_CLIENT_ID || "identity-service";
+const IDENTITY_SERVICE_CLIENT_SECRET =
+	process.env.IDENTITY_SERVICE_CLIENT_SECRET || "EXAMPLE_REPLACE_ME";
 const TRUST_GATEWAY =
 	(process.env.TRUST_GATEWAY ?? "true").toLowerCase() !== "false";
 const PORT = Number(process.env.IDENTITY_SERVICE_PORT || 4000);
@@ -46,8 +47,8 @@ async function getAdminToken(): Promise<string> {
 			headers: { "Content-Type": "application/x-www-form-urlencoded" },
 			body: new URLSearchParams({
 				grant_type: "client_credentials",
-				client_id: SERVICE_CLIENT_ID,
-				client_secret: SERVICE_CLIENT_SECRET,
+				client_id: IDENTITY_SERVICE_CLIENT_ID,
+				client_secret: IDENTITY_SERVICE_CLIENT_SECRET,
 			}),
 		}
 	);
@@ -103,7 +104,7 @@ app.get("/health", (_req, res) => res.json({ status: "ok" }));
 
 app.get("/users", auth, async (req, res) => {
 	const claims = (req as any).claims as KeycloakClaims;
-	if (!hasClientRole(claims, SERVICE_CLIENT_ID, "read_users")) {
+	if (!hasClientRole(claims, IDENTITY_SERVICE_CLIENT_ID, "read_users")) {
 		return res.status(403).json({ error: "forbidden" });
 	}
 

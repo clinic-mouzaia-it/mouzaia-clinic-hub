@@ -89,12 +89,9 @@ esac
 if [[ "$ACTION" == "up" ]]; then
   echo
   echo "[clinic-hub] Services are starting. If it's the first run, Postgres initialization can take ~10-20s."
-  echo "Traefik:  http://hubtraefik.mouzaiaclinic.local (admin/admin)"
-  echo "Keycloak: http://hubkeycloak.mouzaiaclinic.local (admin/admin)"
-  echo "Kong Gateway (through Traefik): http://hubapi.mouzaiaclinic.local"
-  echo "Kong Gateway (direct, bypass Traefik): http://localhost:8000"
-  echo "  Tip: the sample route requires Host header and path '/test'. Try:"
-  echo "  curl -i -H 'Host: hubapi.mouzaiaclinic.local' http://localhost:8000/test"
-  echo "Postgres: host hubpostgres.mouzaiaclinic.local, port 5432, db clinic-mouzaia-hub, user admin, password admin"
+  echo "Traefik:  http://hubtraefik.mouzaiaclinic.local"
+  echo "Keycloak: http://hubkeycloak.mouzaiaclinic.local"
+  echo "Postgres: host hubpostgres.mouzaiaclinic.local"
+  echo "Krakend: http://hubapi.mouzaiaclinic.local"
 fi
 
