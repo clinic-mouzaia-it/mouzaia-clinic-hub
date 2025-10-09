@@ -17,7 +17,7 @@ services:
       - clinic-hub-keycloak-data:/opt/keycloak/data
     depends_on:
       postgres:
-        condition: service_healthy
+        condition: service_started
     restart: always
     networks:
       - web
@@ -31,11 +31,6 @@ services:
       - "5432:5432"
     volumes:
       - clinic-hub-postgres-db-data:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-admin}"]
-      interval: 5s
-      timeout: 3s
-      retries: 10
     restart: always
     networks:
       - web

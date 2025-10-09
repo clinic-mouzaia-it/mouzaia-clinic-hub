@@ -12,3 +12,4 @@ pgdata/
 /services/pharmacy-service/dist
 /services/shared/dist
 /services/node_modules
+/.vscode
