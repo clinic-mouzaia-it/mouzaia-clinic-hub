@@ -1,0 +1,23 @@
+{
+  "compilerOptions": {
+    "target": "ES2020",
+    "module": "CommonJS",
+    "strict": true,
+    "moduleResolution": "node",
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "skipLibCheck": true,
+    "baseUrl": ".",
+    "paths": {
+      "@clinic/shared": [
+        "shared/src/index"
+      ],
+      "@clinic/shared/*": [
+        "shared/src/*"
+      ],
+      "@shared/*": [
+        "shared/src/*"
+      ]
+    }
+  }
+}

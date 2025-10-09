@@ -11,17 +11,58 @@ services:
   keycloak:
     build: ./keycloak
     image: clinic-hub-keycloak:v0.1.0
+    env_file:
+      - .env
+    volumes:
+      - clinic-hub-keycloak-data:/opt/keycloak/data
     depends_on:
-      - db
+      postgres:
+        condition: service_healthy
     restart: always
     networks:
       - web
 
-  db:
+  postgres:
     build: ./postgres
     image: clinic-hub-postgres:v0.1.0
+    env_file:
+      - .env
     ports:
       - "5432:5432"
+    volumes:
+      - clinic-hub-postgres-db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-admin}"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    restart: always
+    networks:
+      - web
+  identity-service:
+    build:
+      context: ./services
+      dockerfile: identity-service/Dockerfile
+    image: clinic-hub-identity:v0.1.0
+    env_file:
+      - .env
+    depends_on:
+      keycloak:
+        condition: service_started
+    restart: always
+    networks:
+      - web
+
+  pharmacy-service:
+    build:
+      context: ./services
+      dockerfile: pharmacy-service/Dockerfile
+    image: clinic-hub-pharmacy:v0.1.0
+    env_file:
+      - .env
+    depends_on:
+      keycloak:
+        condition: service_started
     restart: always
     networks:
       - web
@@ -29,12 +70,16 @@ services:
   krakend:
     build: ./krakend
     image: clinic-hub-krakend:v0.1.0
-    ports:
-      - "8080:8080" # KrakenD Gateway
     restart: always
+    env_file:
+      - .env
     networks:
       - web
 
 networks:
   web:
     driver: bridge
+
+volumes:
+  clinic-hub-postgres-db-data:
+  clinic-hub-keycloak-data:

@@ -1,0 +1,13 @@
+{
+  "name": "identity-service",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Minimal TypeScript + Express identity microservice",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/index.js",
+    "dev": "ts-node-dev --respawn --transpile-only src/index.ts"
+  },
+  "dependencies": {},
+  "devDependencies": {}
+}

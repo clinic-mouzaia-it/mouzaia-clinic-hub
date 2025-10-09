@@ -4,6 +4,10 @@ http:
       basicAuth:
         users:
           - "admin:$2y$05$EmmPwn8IlNMkSqOStWuZ2OVlPWa7XM5CQSdOXPJcN4kyTUGCDC.7C"
+    # kong-host-header:
+    #   headers:
+    #     customRequestHeaders:
+    #       Host: "hubapi.mouzaiaclinic.local"
 
   routers:
     traefik:
@@ -20,6 +24,14 @@ http:
       entryPoints:
         - web
 
+    # kong-gateway:
+    #   rule: "Host(`hubapi.mouzaiaclinic.local`)"
+    #   service: kong-gateway-svc
+    #   entryPoints:
+    #     - web
+    #   middlewares:
+    #     - kong-host-header
+
     krakend-gateway:
       rule: "Host(`hubapi.mouzaiaclinic.local`)"
       service: krakend-gateway-svc
@@ -31,6 +43,11 @@ http:
       loadBalancer:
         servers:
           - url: "http://keycloak:8080"
+
+    # kong-gateway-svc:
+    #   loadBalancer:
+    #     servers:
+    #       - url: "http://kong:8000"
 
     krakend-gateway-svc:
       loadBalancer:

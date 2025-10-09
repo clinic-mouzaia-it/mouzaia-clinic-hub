@@ -1,35 +1,195 @@
 {
     "realm": "clinic-mouzaia-hub",
     "enabled": true,
-    "registrationAllowed": false,
-    "loginWithEmailAllowed": true,
-    "duplicateEmailsAllowed": false,
-    "resetPasswordAllowed": false,
-    "passwordPolicy": "length(8)",
     "roles": {
-        "realm": [
-            {
-                "name": "user",
-                "description": "Regular user"
-            },
-            {
-                "name": "admin",
-                "description": "Administrator"
-            }
-        ]
+        "client": {
+            "identity-service": [
+                {
+                    "name": "read_users",
+                    "description": "Allows calling /users through KrakenD Gateway",
+                    "composite": false,
+                    "clientRole": true
+                },
+                {
+                    "name": "read_profile",
+                    "description": "Allows calling /profile through KrakenD Gateway",
+                    "composite": false,
+                    "clientRole": true
+                }
+            ],
+            "krakend-gateway": [
+                {
+                    "name": "api-user",
+                    "description": "Allows calling protected endpoints at KrakenD",
+                    "composite": false,
+                    "clientRole": true
+                }
+            ],
+            "pharmacy": [
+                {
+                    "name": "pharmacist",
+                    "description": "Allows pharmacists to access pharmacy resources",
+                    "composite": false,
+                    "clientRole": true
+                },
+                {
+                    "name": "allowed_to_take_medicines",
+                    "description": "Staff allowed to take medicines",
+                    "composite": false,
+                    "clientRole": true
+                },
+                {
+                    "name": "see-medicines",
+                    "description": "Permission to list medicines via pharmacy service",
+                    "composite": false,
+                    "clientRole": true
+                }
+            ]
+        }
     },
+    "users": [
+        {
+            "username": "service-account-identity-service",
+            "enabled": true,
+            "serviceAccountClientId": "identity-service",
+            "realmRoles": [],
+            "clientRoles": {
+                "realm-management": [
+                    "view-users",
+                    "query-users"
+                ]
+            }
+        },
+        {
+            "username": "pharmacist",
+            "enabled": true,
+            "emailVerified": true,
+            "firstName": "Pharmacist",
+            "lastName": "Pharmacist",
+            "email": "pharmacist@pharmacy.com",
+            "attributes": {
+                "national_id": [
+                    "P-0001"
+                ]
+            },
+            "realmRoles": [],
+            "clientRoles": {
+                "pharmacy": [
+                    "pharmacist",
+                    "see-medicines"
+                ],
+                "krakend-gateway": [
+                    "api-user"
+                ],
+                "identity-service": [
+                    "read_users"
+                ]
+            },
+            "credentials": [
+                {
+                    "type": "password",
+                    "value": "DummyPassword123!",
+                    "temporary": false
+                }
+            ]
+        },
+        {
+            "username": "staff1",
+            "enabled": true,
+            "emailVerified": true,
+            "firstName": "Staff",
+            "lastName": "One",
+            "email": "staff1@pharmacy.com",
+            "attributes": {
+                "national_id": [
+                    "S1-0001"
+                ]
+            },
+            "realmRoles": [],
+            "clientRoles": {
+                "pharmacy": [
+                    "allowed_to_take_medicines"
+                ]
+            },
+            "credentials": [
+                {
+                    "type": "password",
+                    "value": "DummyPass1!",
+                    "temporary": false
+                }
+            ]
+        },
+        {
+            "username": "staff2",
+            "enabled": true,
+            "emailVerified": true,
+            "firstName": "Staff",
+            "lastName": "Two",
+            "email": "staff2@pharmacy.com",
+            "attributes": {
+                "national_id": [
+                    "S2-0002"
+                ]
+            },
+            "realmRoles": [],
+            "clientRoles": {},
+            "credentials": [
+                {
+                    "type": "password",
+                    "value": "DummyPass2!",
+                    "temporary": false
+                }
+            ]
+        }
+    ],
     "clients": [
         {
+            "clientId": "identity-service",
+            "enabled": true,
+            "protocol": "openid-connect",
+            "publicClient": false,
+            "directAccessGrantsEnabled": false,
+            "standardFlowEnabled": false,
+            "serviceAccountsEnabled": true,
+            "bearerOnly": false,
+            "secret": "${IDENTITY_SERVICE_CLIENT_SECRET}",
+            "attributes": {
+                "client_credentials.use_refresh_token": "false"
+            },
+            "redirectUris": [],
+            "webOrigins": []
+        },
+        {
             "clientId": "krakend-gateway",
+            "enabled": true,
             "protocol": "openid-connect",
             "publicClient": true,
             "directAccessGrantsEnabled": true,
             "standardFlowEnabled": true,
             "serviceAccountsEnabled": false,
-            "attributes": {
-                "post.logout.redirect.uris": "+"
-            },
+            "bearerOnly": false,
             "redirectUris": [
+                "http://localhost/*",
+                "http://hubapi.mouzaiaclinic.local/*"
+            ],
+            "webOrigins": [
+                "*"
+            ]
+        },
+        {
+            "clientId": "pharmacy",
+            "enabled": true,
+            "protocol": "openid-connect",
+            "publicClient": true,
+            "directAccessGrantsEnabled": true,
+            "standardFlowEnabled": true,
+            "serviceAccountsEnabled": false,
+            "bearerOnly": false,
+            "redirectUris": [
+                "http://localhost/*",
+                "http://hubapi.mouzaiaclinic.local/*"
+            ],
+            "webOrigins": [
                 "*"
             ]
         }
