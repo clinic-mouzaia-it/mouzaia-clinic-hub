@@ -1,10 +1,14 @@
 -- CreateTable
 CREATE TABLE "medicines" (
-    "id" SERIAL NOT NULL,
-    "name" TEXT NOT NULL,
-    "description" TEXT,
-    "quantity" INTEGER NOT NULL DEFAULT 0,
-    "price" DECIMAL(10,2) NOT NULL,
+    "id" UUID NOT NULL DEFAULT gen_random_uuid(),
+    "DCI" TEXT NOT NULL,
+    "nom_commercial" TEXT NOT NULL,
+    "STOCK" INTEGER NOT NULL DEFAULT 0,
+    "DDP" TEXT,
+    "LOT" TEXT,
+    "COUT" DECIMAL(10,2) NOT NULL,
+    "PRIX_DE_VENTE" DECIMAL(10,2) NOT NULL,
+    "deleted" BOOLEAN NOT NULL DEFAULT false,
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP(3) NOT NULL,
 
