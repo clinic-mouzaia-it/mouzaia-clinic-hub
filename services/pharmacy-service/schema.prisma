@@ -1,6 +1,7 @@
 generator client {
-  provider = "prisma-client-js"
-  output   = "../node_modules/.prisma/pharmacy-client"
+  provider      = "prisma-client-js"
+  output        = "../node_modules/@prisma/pharmacy-client"
+  binaryTargets = ["native", "linux-musl-openssl-3.0.x"]
 }
 
 datasource db {
@@ -9,17 +10,17 @@ datasource db {
 }
 
 model Medicine {
-  id              String   @id @default(uuid()) @db.Uuid
-  dci             String   @map("DCI")
-  nomCommercial   String   @map("nom_commercial")
-  stock           Int      @default(0) @map("STOCK")
-  ddp             String?  @map("DDP")
-  lot             String?  @map("LOT")
-  cout            Decimal  @db.Decimal(10, 2) @map("COUT")
-  prixDeVente     Decimal  @db.Decimal(10, 2) @map("PRIX_DE_VENTE")
-  deleted         Boolean  @default(false)
-  createdAt       DateTime @default(now()) @map("created_at")
-  updatedAt       DateTime @updatedAt @map("updated_at")
+  id            String   @id @default(uuid()) @db.Uuid
+  dci           String   @map("DCI")
+  nomCommercial String   @map("nom_commercial")
+  stock         Int      @default(0) @map("STOCK")
+  ddp           String?  @map("DDP")
+  lot           String?  @map("LOT")
+  cout          Decimal  @map("COUT") @db.Decimal(10, 2)
+  prixDeVente   Decimal  @map("PRIX_DE_VENTE") @db.Decimal(10, 2)
+  deleted       Boolean  @default(false)
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
 
   @@map("medicines")
 }

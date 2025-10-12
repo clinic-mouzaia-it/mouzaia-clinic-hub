@@ -11,24 +11,25 @@
     "build:all": "npm run build --workspace=@clinic/shared && npm run build --workspace=identity-service && npm run build --workspace=pharmacy-service",
     "build:identity": "npm run build --workspace=identity-service",
     "build:pharmacy": "npm run build --workspace=pharmacy-service",
+    "prisma:generate": "npx prisma generate --schema=./pharmacy-service/schema.prisma",
     "lint": "echo 'no lint configured'",
     "format": "echo 'no format configured'"
   },
   "dependencies": {
+    "@clinic/shared": "file:shared",
+    "@prisma/client": "^6.17.1",
     "express": "^4.19.2",
     "jsonwebtoken": "^9.0.2",
-    "jwks-rsa": "^3.1.0",
-    "@clinic/shared": "file:shared",
-    "@prisma/client": "^5.14.0"
+    "jwks-rsa": "^3.1.0"
   },
   "devDependencies": {
-    "typescript": "^5.4.5",
-    "ts-node": "^10.9.2",
-    "ts-node-dev": "^2.0.0",
-    "@types/node": "^20.14.2",
     "@types/express": "^4.17.21",
     "@types/jsonwebtoken": "^9.0.6",
-    "prisma": "^5.14.0"
+    "@types/node": "^20.14.2",
+    "prisma": "^6.17.1",
+    "ts-node": "^10.9.2",
+    "ts-node-dev": "^2.0.0",
+    "typescript": "^5.4.5"
   },
   "overrides": {
     "express": "^4.19.2",

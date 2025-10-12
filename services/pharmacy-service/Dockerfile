@@ -21,12 +21,12 @@ COPY pharmacy-service/schema.prisma ./pharmacy-service/schema.prisma
 COPY pharmacy-service/migrations ./pharmacy-service/migrations
 COPY pharmacy-service/src ./pharmacy-service/src
 
+# Generate Prisma client first
+RUN npx prisma generate --schema=./pharmacy-service/schema.prisma
+
 # Build shared then service
 RUN cd shared && npm run build && cd .. \
   && cd pharmacy-service && npm run build && cd ..
-
-# Generate Prisma client
-RUN npx prisma generate --schema=./pharmacy-service/schema.prisma
 
 # ---- Runtime Stage ----
 FROM node:20-alpine AS runtime

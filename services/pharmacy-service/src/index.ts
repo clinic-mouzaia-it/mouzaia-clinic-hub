@@ -1,5 +1,8 @@
 import express, { Request, Response } from "express";
 import { decodeToken, hasClientRole } from "@clinic/shared/auth";
+import { PrismaClient, Prisma } from "@prisma/pharmacy-client";
+
+const prisma = new PrismaClient();
 
 const app = express();
 app.use(express.json());
@@ -41,7 +44,7 @@ app.get("/pharmacy/medicines", (req: Request, res: Response) => {
 	const claims = decodeToken(token);
 	if (!claims) return res.status(401).json({ error: "invalid_token" });
 
-	const allowed = hasClientRole(claims, "pharmacy", "see-medicines");
+	const allowed = hasClientRole(claims, "pharmacy", "allowed_to_see_medicines");
 	if (!allowed) return res.status(403).json({ error: "forbidden" });
 
 	return res.json([
@@ -49,6 +52,35 @@ app.get("/pharmacy/medicines", (req: Request, res: Response) => {
 		{ id: "med-002", name: "Ibuprofen 200mg", stock: 75 },
 	]);
 });
+
+app.post(
+	"/pharmacy/medicines",
+	async (req: Request<{}, {}, Prisma.MedicineCreateInput>, res: Response) => {
+		const token = bearerFromAuthHeader(req);
+		if (!token) return res.status(401).json({ error: "missing_token" });
+
+		const claims = decodeToken(token);
+		if (!claims) return res.status(401).json({ error: "invalid_token" });
+
+		const allowed = hasClientRole(
+			claims,
+			"pharmacy",
+			"allowed_to_add_medicines"
+		);
+		if (!allowed) return res.status(403).json({ error: "forbidden" });
+
+		try {
+			const medicine = await prisma.medicine.create({
+				data: req.body,
+			});
+			return res.status(201).json(medicine);
+		} catch (err) {
+			return res
+				.status(500)
+				.json({ error: "database_error", message: (err as Error).message });
+		}
+	}
+);
 
 app.listen(PORT, () =>
 	console.log(`pharmacy-service listening on port ${PORT}`)

@@ -19,7 +19,7 @@
             ],
             "krakend-gateway": [
                 {
-                    "name": "api-user",
+                    "name": "api_user",
                     "description": "Allows calling protected endpoints at KrakenD",
                     "composite": false,
                     "clientRole": true
@@ -27,8 +27,8 @@
             ],
             "pharmacy": [
                 {
-                    "name": "pharmacist",
-                    "description": "Allows pharmacists to access pharmacy resources",
+                    "name": "allowed_to_see_medicines",
+                    "description": "Permission to list medicines via pharmacy service",
                     "composite": false,
                     "clientRole": true
                 },
@@ -39,8 +39,8 @@
                     "clientRole": true
                 },
                 {
-                    "name": "see-medicines",
-                    "description": "Permission to list medicines via pharmacy service",
+                    "name": "allowed_to_add_medicines",
+                    "description": "Permission to add medicines to the pharmacy inventory",
                     "composite": false,
                     "clientRole": true
                 }
@@ -75,11 +75,12 @@
             "realmRoles": [],
             "clientRoles": {
                 "pharmacy": [
-                    "pharmacist",
-                    "see-medicines"
+                    "allowed_to_see_medicines",
+                    "allowed_to_take_medicines",
+                    "allowed_to_add_medicines"
                 ],
                 "krakend-gateway": [
-                    "api-user"
+                    "api_user"
                 ],
                 "identity-service": [
                     "read_users"
