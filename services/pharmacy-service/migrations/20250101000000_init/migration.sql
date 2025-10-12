@@ -12,5 +12,8 @@ CREATE TABLE "medicines" (
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP(3) NOT NULL,
 
-    CONSTRAINT "medicines_pkey" PRIMARY KEY ("id")
+    CONSTRAINT "medicines_pkey" PRIMARY KEY ("id"),
+    CONSTRAINT "medicines_cout_positive" CHECK ("COUT" > 0),
+    CONSTRAINT "medicines_prix_de_vente_positive" CHECK ("PRIX_DE_VENTE" > 0),
+    CONSTRAINT "medicines_stock_non_negative" CHECK ("STOCK" >= 0)
 );
