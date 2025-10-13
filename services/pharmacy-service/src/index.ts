@@ -37,7 +37,7 @@ app.post("/pharmacy/verify-staff", async (req: Request, res: Response) => {
 	}
 });
 
-app.get("/pharmacy/medicines", (req: Request, res: Response) => {
+app.get("/pharmacy/medicines", async (req: Request, res: Response) => {
 	const token = bearerFromAuthHeader(req);
 	if (!token) return res.status(401).json({ error: "missing_token" });
 
@@ -47,10 +47,17 @@ app.get("/pharmacy/medicines", (req: Request, res: Response) => {
 	const allowed = hasClientRole(claims, "pharmacy", "allowed_to_see_medicines");
 	if (!allowed) return res.status(403).json({ error: "forbidden" });
 
-	return res.json([
-		{ id: "med-001", name: "Paracetamol 500mg", stock: 120 },
-		{ id: "med-002", name: "Ibuprofen 200mg", stock: 75 },
-	]);
+	try {
+		const medicines = await prisma.medicine.findMany({
+			where: { deleted: false },
+			orderBy: { createdAt: "desc" },
+		});
+		return res.json(medicines);
+	} catch (err) {
+		return res
+			.status(500)
+			.json({ error: "database_error", message: (err as Error).message });
+	}
 });
 
 app.post(
