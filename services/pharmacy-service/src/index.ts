@@ -82,6 +82,38 @@ app.post(
 	}
 );
 
+app.delete(
+	"/pharmacy/medicines/:id/soft-delete",
+	async (req: Request, res: Response) => {
+		const token = bearerFromAuthHeader(req);
+		if (!token) return res.status(401).json({ error: "missing_token" });
+
+		const claims = decodeToken(token);
+		if (!claims) return res.status(401).json({ error: "invalid_token" });
+
+		const allowed = hasClientRole(
+			claims,
+			"pharmacy",
+			"allowed_to_delete_medicines"
+		);
+		if (!allowed) return res.status(403).json({ error: "forbidden" });
+
+		const { id } = req.params;
+
+		try {
+			const medicine = await prisma.medicine.update({
+				where: { id },
+				data: { deleted: true },
+			});
+			return res.json(medicine);
+		} catch (err) {
+			return res
+				.status(500)
+				.json({ error: "database_error", message: (err as Error).message });
+		}
+	}
+);
+
 app.listen(PORT, () =>
 	console.log(`pharmacy-service listening on port ${PORT}`)
 );

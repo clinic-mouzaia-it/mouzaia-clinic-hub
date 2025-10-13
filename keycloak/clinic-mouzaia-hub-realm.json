@@ -43,6 +43,12 @@
                     "description": "Permission to add medicines to the pharmacy inventory",
                     "composite": false,
                     "clientRole": true
+                },
+                {
+                    "name": "allowed_to_delete_medicines",
+                    "description": "Permission to delete medicines from the pharmacy inventory",
+                    "composite": false,
+                    "clientRole": true
                 }
             ]
         }
@@ -77,7 +83,8 @@
                 "pharmacy": [
                     "allowed_to_see_medicines",
                     "allowed_to_take_medicines",
-                    "allowed_to_add_medicines"
+                    "allowed_to_add_medicines",
+                    "allowed_to_delete_medicines"
                 ],
                 "krakend-gateway": [
                     "api_user"
