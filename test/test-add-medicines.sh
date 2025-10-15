@@ -4,7 +4,7 @@ set -euo pipefail
 # Config
 REALM="clinic-mouzaia-hub"
 KEYCLOAK_HOST="http://hubkeycloak.mouzaiaclinic.local"
-CLIENT_ID="krakend-gateway"
+CLIENT_ID="pharmacy-service"
 USERNAME="pharmacist"
 PASSWORD="DummyPassword123!"
 TOKEN_URL="$KEYCLOAK_HOST/realms/$REALM/protocol/openid-connect/token"
@@ -48,8 +48,8 @@ printf "%s" "$DECODED" | jq '{sub, iss, exp, resource_access}'
 printf "\nRoles under client krakend-gateway:\n"
 printf "%s" "$DECODED" | jq -r '.resource_access["krakend-gateway"].roles // [] | join(", ")'
 
-printf "\nRoles under client pharmacy:\n"
-printf "%s" "$DECODED" | jq -r '.resource_access["pharmacy"].roles // [] | join(", ")'
+printf "\nRoles under client pharmacy-service:\n"
+printf "%s" "$DECODED" | jq -r '.resource_access["pharmacy-service"].roles // [] | join(", ")'
 
 # Test medicines to add
 MEDICINES=(

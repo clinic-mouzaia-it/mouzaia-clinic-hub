@@ -24,3 +24,18 @@ model Medicine {
 
   @@map("medicines")
 }
+
+model Distribution {
+  id              String   @id @default(uuid()) @db.Uuid
+  medicineId      String   @map("medicine_id") @db.Uuid
+  medicineName    String   @map("medicine_name")
+  quantity        Int      @default(1)
+  staffUserId     String   @map("staff_user_id")
+  staffUsername   String   @map("staff_username")
+  staffNationalId String   @map("staff_national_id")
+  staffFullName   String?  @map("staff_full_name")
+  distributedBy   String   @map("distributed_by")
+  distributedAt   DateTime @default(now()) @map("distributed_at")
+
+  @@map("distributions")
+}

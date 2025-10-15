@@ -15,6 +15,12 @@
                     "description": "Allows calling /profile through KrakenD Gateway",
                     "composite": false,
                     "clientRole": true
+                },
+                {
+                    "name": "get_users_from_national_id",
+                    "description": "Allows querying users by national ID",
+                    "composite": false,
+                    "clientRole": true
                 }
             ],
             "krakend-gateway": [
@@ -25,7 +31,7 @@
                     "clientRole": true
                 }
             ],
-            "pharmacy": [
+            "pharmacy-service": [
                 {
                     "name": "allowed_to_see_medicines",
                     "description": "Permission to list medicines via pharmacy service",
@@ -47,6 +53,12 @@
                 {
                     "name": "allowed_to_delete_medicines",
                     "description": "Permission to delete medicines from the pharmacy inventory",
+                    "composite": false,
+                    "clientRole": true
+                },
+                {
+                    "name": "allowed_to_distribute_medicine",
+                    "description": "Permission to distribute medicines to staff",
                     "composite": false,
                     "clientRole": true
                 }
@@ -80,17 +92,19 @@
             },
             "realmRoles": [],
             "clientRoles": {
-                "pharmacy": [
+                "pharmacy-service": [
                     "allowed_to_see_medicines",
                     "allowed_to_take_medicines",
                     "allowed_to_add_medicines",
-                    "allowed_to_delete_medicines"
+                    "allowed_to_delete_medicines",
+                    "allowed_to_distribute_medicine"
                 ],
                 "krakend-gateway": [
                     "api_user"
                 ],
                 "identity-service": [
-                    "read_users"
+                    "read_users",
+                    "get_users_from_national_id"
                 ]
             },
             "credentials": [
@@ -115,7 +129,7 @@
             },
             "realmRoles": [],
             "clientRoles": {
-                "pharmacy": [
+                "pharmacy-service": [
                     "allowed_to_take_medicines"
                 ]
             },
@@ -185,7 +199,7 @@
             ]
         },
         {
-            "clientId": "pharmacy",
+            "clientId": "pharmacy-service",
             "enabled": true,
             "protocol": "openid-connect",
             "publicClient": true,
@@ -195,9 +209,11 @@
             "bearerOnly": false,
             "redirectUris": [
                 "http://localhost/*",
+                "http://localhost:5173/*",
                 "http://hubapi.mouzaiaclinic.local/*"
             ],
             "webOrigins": [
+                "http://localhost:5173",
                 "*"
             ]
         }

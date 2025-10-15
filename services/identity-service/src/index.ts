@@ -142,6 +142,92 @@ app.get("/users", auth, async (req, res) => {
 	}
 });
 
+app.get("/users/by-national-id", auth, async (req, res) => {
+	const claims = (req as any).claims as KeycloakClaims;
+	if (
+		!hasClientRole(
+			claims,
+			IDENTITY_SERVICE_CLIENT_ID,
+			"get_users_from_national_id"
+		)
+	) {
+		return res.status(403).json({ error: "forbidden" });
+	}
+
+	const nationalId = req.query.nationalId as string;
+	if (!nationalId) {
+		return res.status(400).json({ error: "missing_national_id" });
+	}
+
+	try {
+		const adminToken = await getAdminToken();
+		// Search for users with matching national_id attribute
+		const resp = await fetch(
+			`${KEYCLOAK_BASE_URL}/admin/realms/${REALM}/users?q=national_id:${encodeURIComponent(nationalId)}`,
+			{
+				headers: { Authorization: `Bearer ${adminToken}` },
+			}
+		);
+		if (!resp.ok) return res.status(502).json({ error: "upstream_error" });
+
+		const users = (await resp.json()) as Array<{
+			id: string;
+			username: string;
+			email?: string;
+			firstName?: string;
+			lastName?: string;
+			attributes?: { national_id?: string[] };
+		}>;
+
+		// Filter to ensure exact match (Keycloak search may be fuzzy)
+		const matchedUsers = users.filter(
+			(u) => u.attributes?.national_id?.[0] === nationalId
+		);
+
+		if (matchedUsers.length === 0) {
+			return res.status(404).json({ error: "user_not_found" });
+		}
+
+		if (matchedUsers.length > 1) {
+			return res
+				.status(409)
+				.json({ error: "multiple_users_found", count: matchedUsers.length });
+		}
+
+		const user = matchedUsers[0];
+
+		// Fetch full user details including roles
+		const roleResp = await fetch(
+			`${KEYCLOAK_BASE_URL}/admin/realms/${REALM}/users/${user.id}/role-mappings`,
+			{
+				headers: { Authorization: `Bearer ${adminToken}` },
+			}
+		);
+
+		if (!roleResp.ok) {
+			return res.status(502).json({ error: "failed_to_fetch_roles" });
+		}
+
+		const roleMappings = await roleResp.json();
+
+		const userDetails = {
+			id: user.id,
+			username: user.username,
+			email: user.email,
+			firstName: user.firstName,
+			lastName: user.lastName,
+			nationalId: user.attributes?.national_id?.[0],
+			roleMappings: roleMappings,
+		};
+
+		return res.json(userDetails);
+	} catch (err) {
+		return res
+			.status(500)
+			.json({ error: "server_error", message: (err as Error).message });
+	}
+});
+
 app.listen(PORT, () =>
 	console.log(`identity-service listening on port ${PORT}`)
 );

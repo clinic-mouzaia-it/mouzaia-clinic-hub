@@ -4,7 +4,7 @@ set -euo pipefail
 # Config
 REALM="clinic-mouzaia-hub"
 KEYCLOAK_HOST="http://hubkeycloak.mouzaiaclinic.local"
-CLIENT_ID="krakend-gateway"
+CLIENT_ID="pharmacy-service"
 API_HOST="http://hubapi.mouzaiaclinic.local"
 ENDPOINT="/pharmacy/medicines"
 

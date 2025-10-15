@@ -24,7 +24,11 @@ app.get("/pharmacy/medicines", async (req: Request, res: Response) => {
 	const claims = decodeToken(token);
 	if (!claims) return res.status(401).json({ error: "invalid_token" });
 
-	const allowed = hasClientRole(claims, "pharmacy", "allowed_to_see_medicines");
+	const allowed = hasClientRole(
+		claims,
+		"pharmacy-service",
+		"allowed_to_see_medicines"
+	);
 	if (!allowed) return res.status(403).json({ error: "forbidden" });
 
 	try {
@@ -51,7 +55,7 @@ app.post(
 
 		const allowed = hasClientRole(
 			claims,
-			"pharmacy",
+			"pharmacy-service",
 			"allowed_to_add_medicines"
 		);
 		if (!allowed) return res.status(403).json({ error: "forbidden" });
@@ -80,7 +84,7 @@ app.delete(
 
 		const allowed = hasClientRole(
 			claims,
-			"pharmacy",
+			"pharmacy-service",
 			"allowed_to_delete_medicines"
 		);
 		if (!allowed) return res.status(403).json({ error: "forbidden" });
@@ -97,6 +101,143 @@ app.delete(
 			return res
 				.status(500)
 				.json({ error: "database_error", message: (err as Error).message });
+		}
+	}
+);
+
+app.post(
+	"/pharmacy/medicines/distribute",
+	async (req: Request, res: Response) => {
+		const token = bearerFromAuthHeader(req);
+		if (!token) return res.status(401).json({ error: "missing_token" });
+
+		const claims = decodeToken(token);
+		if (!claims) return res.status(401).json({ error: "invalid_token" });
+
+		const allowed = hasClientRole(
+			claims,
+			"pharmacy-service",
+			"allowed_to_distribute_medicine"
+		);
+		if (!allowed) return res.status(403).json({ error: "forbidden" });
+
+		const { staffUser, medicines } = req.body;
+
+		if (!staffUser || !medicines || !Array.isArray(medicines)) {
+			return res.status(400).json({ error: "missing_required_fields" });
+		}
+
+		if (medicines.length === 0) {
+			return res.status(400).json({ error: "no_medicines_to_distribute" });
+		}
+
+		// Validate staffUser has required fields
+		if (
+			!staffUser.id ||
+			!staffUser.username ||
+			!staffUser.nationalId ||
+			!staffUser.roleMappings
+		) {
+			return res.status(400).json({ error: "invalid_staff_user_data" });
+		}
+
+		// Check if staff user has allowed_to_take_medicines role
+		const clientMappings = staffUser.roleMappings.clientMappings || {};
+		const pharmacyRoles = clientMappings.pharmacy?.mappings || [];
+		const hasPermission = pharmacyRoles.some(
+			(role: { name: string }) => role.name === "allowed_to_take_medicines"
+		);
+
+		if (!hasPermission) {
+			return res.status(403).json({
+				error: "staff_not_allowed_to_take_medicines",
+				message: `Staff member ${staffUser.username} does not have permission to receive medicines`,
+			});
+		}
+
+		try {
+			// Validate all medicines and check stock
+			const medicineIds = medicines.map((m: { id: string }) => m.id);
+			const dbMedicines = await prisma.medicine.findMany({
+				where: { id: { in: medicineIds }, deleted: false },
+			});
+
+			if (dbMedicines.length !== medicines.length) {
+				return res.status(404).json({ error: "some_medicines_not_found" });
+			}
+
+			// Check stock for all medicines
+			for (const requestedMed of medicines) {
+				const dbMed = dbMedicines.find((m) => m.id === requestedMed.id);
+				if (!dbMed) {
+					return res.status(404).json({
+						error: "medicine_not_found",
+						medicineId: requestedMed.id,
+					});
+				}
+				if (dbMed.stock < requestedMed.quantity) {
+					return res.status(400).json({
+						error: "insufficient_stock",
+						medicineName: dbMed.nomCommercial,
+						available: dbMed.stock,
+						requested: requestedMed.quantity,
+					});
+				}
+			}
+
+			const staffFullName = staffUser.firstName
+				? `${staffUser.firstName} ${staffUser.lastName || ""}`.trim()
+				: staffUser.username;
+
+			const distributorName = claims.preferred_username || claims.sub;
+
+			// Create distributions and update stock in a transaction
+			const results = await prisma.$transaction(async (tx) => {
+				const distributions = [];
+
+				for (const requestedMed of medicines) {
+					const dbMed = dbMedicines.find((m) => m.id === requestedMed.id);
+					if (!dbMed) continue; // Already validated above, but TypeScript safety
+
+					// Create distribution record
+					const distribution = await tx.distribution.create({
+						data: {
+							medicineId: requestedMed.id,
+							medicineName: dbMed.nomCommercial,
+							quantity: requestedMed.quantity,
+							staffUserId: staffUser.id,
+							staffUsername: staffUser.username,
+							staffNationalId: staffUser.nationalId,
+							staffFullName: staffFullName,
+							distributedBy: distributorName,
+						},
+					});
+
+					// Update medicine stock
+					await tx.medicine.update({
+						where: { id: requestedMed.id },
+						data: {
+							stock: {
+								decrement: requestedMed.quantity,
+							},
+						},
+					});
+
+					distributions.push(distribution);
+				}
+
+				return distributions;
+			});
+
+			return res.json({
+				success: true,
+				message: `Successfully distributed ${medicines.length} medicine(s) to ${staffFullName}`,
+				distributions: results,
+			});
+		} catch (err) {
+			return res
+				.status(500)
+				.json({ error: "server_error", message: (err as Error).message });
 		}
 	}
 );
