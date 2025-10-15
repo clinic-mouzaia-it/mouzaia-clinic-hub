@@ -105,6 +105,90 @@ app.delete(
 	}
 );
 
+app.get(
+	"/pharmacy/medicines/deleted",
+	async (req: Request, res: Response) => {
+		const token = bearerFromAuthHeader(req);
+		if (!token) return res.status(401).json({ error: "missing_token" });
+
+		const claims = decodeToken(token);
+		if (!claims) return res.status(401).json({ error: "invalid_token" });
+
+		const allowed = hasClientRole(
+			claims,
+			"pharmacy-service",
+			"allowed_to_see_deleted_medicines"
+		);
+		if (!allowed) return res.status(403).json({ error: "forbidden" });
+
+		try {
+			const deletedMedicines = await prisma.medicine.findMany({
+				where: { deleted: true },
+				orderBy: { updatedAt: "desc" },
+			});
+			return res.json(deletedMedicines);
+		} catch (err) {
+			return res
+				.status(500)
+				.json({ error: "database_error", message: (err as Error).message });
+		}
+	}
+);
+
+app.patch(
+	"/pharmacy/medicines/:id/restore",
+	async (req: Request, res: Response) => {
+		const token = bearerFromAuthHeader(req);
+		if (!token) return res.status(401).json({ error: "missing_token" });
+
+		const claims = decodeToken(token);
+		if (!claims) return res.status(401).json({ error: "invalid_token" });
+
+		const allowed = hasClientRole(
+			claims,
+			"pharmacy-service",
+			"allowed_to_restore_deleted_medicines"
+		);
+		if (!allowed) return res.status(403).json({ error: "forbidden" });
+
+		const { id } = req.params;
+
+		try {
+			// First check if the medicine exists and is deleted
+			const existingMedicine = await prisma.medicine.findUnique({
+				where: { id },
+			});
+
+			if (!existingMedicine) {
+				return res.status(404).json({ error: "medicine_not_found" });
+			}
+
+			if (!existingMedicine.deleted) {
+				return res.status(400).json({ 
+					error: "medicine_not_deleted",
+					message: "This medicine is not marked as deleted"
+				});
+			}
+
+			// Restore the medicine by setting deleted to false
+			const restoredMedicine = await prisma.medicine.update({
+				where: { id },
+				data: { deleted: false },
+			});
+
+			return res.json({
+				success: true,
+				message: "Medicine restored successfully",
+				medicine: restoredMedicine
+			});
+		} catch (err) {
+			return res
+				.status(500)
+				.json({ error: "database_error", message: (err as Error).message });
+		}
+	}
+);
+
 app.post(
 	"/pharmacy/medicines/distribute",
 	async (req: Request, res: Response) => {

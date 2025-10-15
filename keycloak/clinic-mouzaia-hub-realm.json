@@ -61,6 +61,18 @@
                     "description": "Permission to distribute medicines to staff",
                     "composite": false,
                     "clientRole": true
+                },
+                {
+                    "name": "allowed_to_see_deleted_medicines",
+                    "description": "Permission to view deleted medicines",
+                    "composite": false,
+                    "clientRole": true
+                },
+                {
+                    "name": "allowed_to_restore_deleted_medicines",
+                    "description": "Permission to restore deleted medicines back to active",
+                    "composite": false,
+                    "clientRole": true
                 }
             ]
         }
@@ -97,7 +109,9 @@
                     "allowed_to_take_medicines",
                     "allowed_to_add_medicines",
                     "allowed_to_delete_medicines",
-                    "allowed_to_distribute_medicine"
+                    "allowed_to_distribute_medicine",
+                    "allowed_to_see_deleted_medicines",
+                    "allowed_to_restore_deleted_medicines"
                 ],
                 "krakend-gateway": [
                     "api_user"
