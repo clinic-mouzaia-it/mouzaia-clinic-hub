@@ -5,6 +5,32 @@
     "timeout": "3000ms",
     "cache_ttl": "300s",
     "output_encoding": "json",
+    "extra_config": {
+        "security/cors": {
+            "allow_origins": [
+                "http://localhost:5173",
+                "http://localhost:3000"
+            ],
+            "allow_methods": [
+                "GET",
+                "POST",
+                "PUT",
+                "DELETE",
+                "OPTIONS"
+            ],
+            "allow_headers": [
+                "Origin",
+                "Authorization",
+                "Content-Type"
+            ],
+            "expose_headers": [
+                "Content-Length",
+                "Content-Type"
+            ],
+            "max_age": "12h",
+            "allow_credentials": true
+        }
+    },
     "endpoints": [
         {
             "endpoint": "/health",

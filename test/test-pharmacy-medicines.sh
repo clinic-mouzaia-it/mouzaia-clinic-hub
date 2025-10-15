@@ -4,7 +4,7 @@ set -euo pipefail
 # Config
 REALM="clinic-mouzaia-hub"
 KEYCLOAK_HOST="http://hubkeycloak.mouzaiaclinic.local"
-CLIENT_ID="pharmacy"
+CLIENT_ID="pharmacy-service"
 USERNAME="pharmacist"
 PASSWORD="DummyPassword123!"
 TOKEN_URL="$KEYCLOAK_HOST/realms/$REALM/protocol/openid-connect/token"
@@ -20,7 +20,7 @@ Usage: $0 [--debug]
 Environment variables:
   USERNAME        Username to authenticate with (default: pharmacist)
   PASSWORD        Password for the user (default: DummyPassword123!)
-  CLIENT_ID       Keycloak client_id to use (default: pharmacy)
+  CLIENT_ID       Keycloak client_id to use (default: pharmacy-service)
   KEYCLOAK_HOST   Keycloak public URL (default: $KEYCLOAK_HOST)
   API_HOST        API Gateway URL (default: $API_HOST)
 EOF
@@ -70,8 +70,8 @@ printf "%s" "$DECODED" | jq '{sub, iss, exp, resource_access}'
 printf "\nRoles under client krakend-gateway:\n"
 printf "%s" "$DECODED" | jq -r '.resource_access["krakend-gateway"].roles // [] | join(", ")'
 
-printf "\nRoles under client pharmacy:\n"
-printf "%s" "$DECODED" | jq -r '.resource_access["pharmacy"].roles // [] | join(", ")'
+printf "\nRoles under client pharmacy-service:\n"
+printf "%s" "$DECODED" | jq -r '.resource_access["pharmacy-service"].roles // [] | join(", ")'
 
 # Call the protected endpoint
 printf "\nCalling %s%s ...\n" "$API_HOST" "$ENDPOINT"
