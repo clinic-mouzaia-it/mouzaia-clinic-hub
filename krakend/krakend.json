@@ -346,6 +346,39 @@
             ]
         },
         {
+            "endpoint": "/pharmacy/medicines/{id}",
+            "output_encoding": "no-op",
+            "method": "PATCH",
+            "extra_config": {
+                "auth/validator": {
+                    "alg": "RS256",
+                    "jwk_url": "http://keycloak:8080/realms/clinic-mouzaia-hub/protocol/openid-connect/certs",
+                    "issuer": "http://hubkeycloak.mouzaiaclinic.local/realms/clinic-mouzaia-hub",
+                    "roles_key": "resource_access.krakend-gateway.roles",
+                    "roles_key_is_nested": true,
+                    "roles": [
+                        "api_user"
+                    ],
+                    "cache": true,
+                    "operation_debug": true,
+                    "disable_jwk_security": true
+                }
+            },
+            "input_headers": [
+                "Authorization",
+                "Content-Type"
+            ],
+            "backend": [
+                {
+                    "url_pattern": "/pharmacy/medicines/{id}",
+                    "host": [
+                        "http://pharmacy-service:4100"
+                    ],
+                    "encoding": "no-op"
+                }
+            ]
+        },
+        {
             "endpoint": "/pharmacy/medicines/distribute",
             "output_encoding": "no-op",
             "method": "POST",

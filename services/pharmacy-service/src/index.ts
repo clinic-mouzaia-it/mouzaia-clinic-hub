@@ -73,6 +73,77 @@ app.post(
 	}
 );
 
+app.patch(
+	"/pharmacy/medicines/:id",
+	async (
+		req: Request<{ id: string }, {}, Prisma.MedicineUpdateInput>,
+		res: Response
+	) => {
+		const token = bearerFromAuthHeader(req);
+		if (!token) return res.status(401).json({ error: "missing_token" });
+
+		const claims = decodeToken(token);
+		if (!claims) return res.status(401).json({ error: "invalid_token" });
+
+		const allowed = hasClientRole(
+			claims,
+			"pharmacy-service",
+			"allowed_to_update_medicines"
+		);
+		if (!allowed) return res.status(403).json({ error: "forbidden" });
+
+		const { id } = req.params;
+		try {
+			// Prevent updating DB-generated or controlled fields
+			const forbidden = ["id", "deleted", "createdAt", "updatedAt"] as const;
+			for (const f of forbidden) {
+				if (Object.prototype.hasOwnProperty.call(req.body || {}, f)) {
+					return res.status(400).json({
+						error: "invalid_update_field",
+						field: f,
+						message: `Field '${f}' cannot be updated`,
+					});
+				}
+			}
+
+			// Reject empty update payloads
+			if (!req.body || Object.keys(req.body).length === 0) {
+				return res.status(400).json({ error: "empty_update" });
+			}
+
+			// If the medicine is deleted, require a special role to allow updates
+			const current = await prisma.medicine.findUnique({
+				where: { id },
+				select: { deleted: true },
+			});
+			if (!current) {
+				return res.status(404).json({ error: "medicine_not_found" });
+			}
+			if (current.deleted) {
+				const canUpdateDeleted = hasClientRole(
+					claims,
+					"pharmacy-service",
+					"allowed_to_update_deleted_medicines"
+				);
+				if (!canUpdateDeleted) {
+					return res.status(403).json({ error: "forbidden_deleted_update" });
+				}
+			}
+			const updated = await prisma.medicine.update({
+				where: { id },
+				data: req.body,
+			});
+			return res.json(updated);
+		} catch (err: any) {
+			// Map not-found to 404; other validation errors to 400
+			if (err?.code === "P2025") {
+				return res.status(404).json({ error: "medicine_not_found" });
+			}
+			return res.status(400).json({ error: "invalid_update", message: err?.message });
+		}
+	}
+);
+
 app.delete(
 	"/pharmacy/medicines/:id/soft-delete",
 	async (req: Request, res: Response) => {
