@@ -124,7 +124,8 @@
                     "allowed_to_delete_medicines",
                     "allowed_to_distribute_medicine",
                     "allowed_to_see_deleted_medicines",
-                    "allowed_to_restore_deleted_medicines"
+                    "allowed_to_restore_deleted_medicines",
+                    "allowed_to_update_deleted_medicines"
                 ],
                 "krakend-gateway": [
                     "api_user"
