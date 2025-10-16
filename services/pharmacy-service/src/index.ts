@@ -399,6 +399,64 @@ app.post(
 	}
 );
 
+// List distributions endpoint
+app.get("/pharmacy/distributions", async (req: Request, res: Response) => {
+    const token = bearerFromAuthHeader(req);
+    if (!token) return res.status(401).json({ error: "missing_token" });
+
+    const claims = decodeToken(token);
+    if (!claims) return res.status(401).json({ error: "invalid_token" });
+
+    const allowed = hasClientRole(
+        claims,
+        "pharmacy-service",
+        "allowed_to_see_distributions"
+    );
+    if (!allowed) return res.status(403).json({ error: "forbidden" });
+
+    const { staffNationalId, medicineId } = req.query as {
+        staffNationalId?: string;
+        medicineId?: string;
+    };
+    const limitRaw = (req.query.limit as string) || "50";
+    const offsetRaw = (req.query.offset as string) || "0";
+
+    // Validate pagination params
+    const limit = Math.min(Math.max(parseInt(limitRaw, 10) || 50, 1), 200);
+    const offset = Math.max(parseInt(offsetRaw, 10) || 0, 0);
+
+    try {
+        const where: Prisma.DistributionWhereInput = {};
+        if (staffNationalId) {
+            where.staffNationalId = staffNationalId;
+        }
+        if (medicineId) {
+            where.medicineId = medicineId;
+        }
+
+        const [items, total] = await prisma.$transaction([
+            prisma.distribution.findMany({
+                where,
+                orderBy: { distributedAt: "desc" },
+                skip: offset,
+                take: limit,
+            }),
+            prisma.distribution.count({ where }),
+        ]);
+
+        return res.json({
+            total,
+            limit,
+            offset,
+            items,
+        });
+    } catch (err) {
+        return res
+            .status(500)
+            .json({ error: "database_error", message: (err as Error).message });
+    }
+});
+
 app.listen(PORT, () =>
 	console.log(`pharmacy-service listening on port ${PORT}`)
 );

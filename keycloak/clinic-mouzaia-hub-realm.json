@@ -98,6 +98,12 @@
                     "description": "Permission to update deleted medicines",
                     "composite": false,
                     "clientRole": true
+                },
+                {
+                    "name": "allowed_to_see_distributions",
+                    "description": "Permission to list distributions records",
+                    "composite": false,
+                    "clientRole": true
                 }
             ]
         }
@@ -138,7 +144,8 @@
                     "allowed_to_distribute_medicine",
                     "allowed_to_see_deleted_medicines",
                     "allowed_to_restore_deleted_medicines",
-                    "allowed_to_update_deleted_medicines"
+                    "allowed_to_update_deleted_medicines",
+                    "allowed_to_see_distributions"
                 ],
                 "krakend-gateway": [
                     "api_user"
