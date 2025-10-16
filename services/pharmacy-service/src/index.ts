@@ -139,7 +139,9 @@ app.patch(
 			if (err?.code === "P2025") {
 				return res.status(404).json({ error: "medicine_not_found" });
 			}
-			return res.status(400).json({ error: "invalid_update", message: err?.message });
+			return res
+				.status(400)
+				.json({ error: "invalid_update", message: err?.message });
 		}
 	}
 );
@@ -176,35 +178,32 @@ app.delete(
 	}
 );
 
-app.get(
-	"/pharmacy/medicines/deleted",
-	async (req: Request, res: Response) => {
-		const token = bearerFromAuthHeader(req);
-		if (!token) return res.status(401).json({ error: "missing_token" });
+app.get("/pharmacy/medicines/deleted", async (req: Request, res: Response) => {
+	const token = bearerFromAuthHeader(req);
+	if (!token) return res.status(401).json({ error: "missing_token" });
 
-		const claims = decodeToken(token);
-		if (!claims) return res.status(401).json({ error: "invalid_token" });
+	const claims = decodeToken(token);
+	if (!claims) return res.status(401).json({ error: "invalid_token" });
 
-		const allowed = hasClientRole(
-			claims,
-			"pharmacy-service",
-			"allowed_to_see_deleted_medicines"
-		);
-		if (!allowed) return res.status(403).json({ error: "forbidden" });
+	const allowed = hasClientRole(
+		claims,
+		"pharmacy-service",
+		"allowed_to_see_deleted_medicines"
+	);
+	if (!allowed) return res.status(403).json({ error: "forbidden" });
 
-		try {
-			const deletedMedicines = await prisma.medicine.findMany({
-				where: { deleted: true },
-				orderBy: { updatedAt: "desc" },
-			});
-			return res.json(deletedMedicines);
-		} catch (err) {
-			return res
-				.status(500)
-				.json({ error: "database_error", message: (err as Error).message });
-		}
+	try {
+		const deletedMedicines = await prisma.medicine.findMany({
+			where: { deleted: true },
+			orderBy: { updatedAt: "desc" },
+		});
+		return res.json(deletedMedicines);
+	} catch (err) {
+		return res
+			.status(500)
+			.json({ error: "database_error", message: (err as Error).message });
 	}
-);
+});
 
 app.patch(
 	"/pharmacy/medicines/:id/restore",
@@ -235,9 +234,9 @@ app.patch(
 			}
 
 			if (!existingMedicine.deleted) {
-				return res.status(400).json({ 
+				return res.status(400).json({
 					error: "medicine_not_deleted",
-					message: "This medicine is not marked as deleted"
+					message: "This medicine is not marked as deleted",
 				});
 			}
 
@@ -250,7 +249,7 @@ app.patch(
 			return res.json({
 				success: true,
 				message: "Medicine restored successfully",
-				medicine: restoredMedicine
+				medicine: restoredMedicine,
 			});
 		} catch (err) {
 			return res
@@ -297,8 +296,11 @@ app.post(
 		}
 
 		// Check if staff user has allowed_to_take_medicines role
-		const clientMappings = staffUser.roleMappings.clientMappings || {};
-		const pharmacyRoles = clientMappings.pharmacy?.mappings || [];
+		const clientMappings = staffUser.roleMappings?.clientMappings || {};
+		// Keycloak's role-mappings response keys client mappings by clientId.
+		// Our clientId is 'pharmacy-service'.
+		const pharmacyClientMapping = clientMappings["pharmacy-service"];
+		const pharmacyRoles = pharmacyClientMapping?.mappings || [];
 		const hasPermission = pharmacyRoles.some(
 			(role: { name: string }) => role.name === "allowed_to_take_medicines"
 		);
